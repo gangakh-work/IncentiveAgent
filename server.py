@@ -53,14 +53,6 @@ logger = logging.getLogger("server")
 
 app = FastAPI(title="Microsoft Rate Card API", version="1.0.0")
 
-# Serve frontend files
-app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
-
-
-@app.get("/", include_in_schema=False)
-async def serve_frontend():
-    return FileResponse("frontend/chat.html")
-
 # Allow the frontend to call this API. If you serve the frontend from
 # this same app (see the static mount below), CORS doesn't matter for
 # that case — this is here for when the frontend is hosted separately.
