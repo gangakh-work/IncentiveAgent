@@ -20,7 +20,7 @@ if sys.platform.startswith("linux"):
     sys.modules["sqlite3"] = pysqlite3
 
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
-
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -185,7 +185,24 @@ def ask_question(request: AskRequest):
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CHAT_HTML = os.path.join(BASE_DIR, "chat.html")
+LOGO_PNG = os.path.join(
+    BASE_DIR,
+    "logo.png"
+)
 
+
+@app.get("/logo.png", include_in_schema=False)
+def logo():
+    if not os.path.exists(LOGO_PNG):
+        raise HTTPException(
+            status_code=404,
+            detail="logo.png not found"
+        )
+
+    return FileResponse(
+        LOGO_PNG,
+        media_type="image/png"
+    )
 
 @app.get("/", include_in_schema=False)
 def index():
