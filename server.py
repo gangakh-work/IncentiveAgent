@@ -14,6 +14,10 @@ import logging
 import os
 import sys
 
+if sys.platform.startswith("linux"):
+    import pysqlite3
+    sys.modules["sqlite3"] = pysqlite3
+
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 
 from fastapi import FastAPI, HTTPException
