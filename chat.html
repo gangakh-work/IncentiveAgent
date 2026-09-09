@@ -226,16 +226,6 @@
           </div>
         </div>
       </div>
-
-      <div class="p-4 border-t border-void-line">
-        <div id="status-pill" class="flex items-center gap-2.5 rounded-2xl bg-white/[0.03] border border-white/8 px-3 py-2.5">
-          <span id="status-dot" class="h-2.5 w-2.5 rounded-full status-dot-live"></span>
-          <div class="min-w-0">
-            <p class="text-[11px] font-bold text-white leading-none">System status</p>
-            <p id="status-text" class="text-[11px] text-white/45 mt-1 truncate">Checking…</p>
-          </div>
-        </div>
-      </div>
     </aside>
 
     <section id="mainContent" class="flex-1 min-w-0 flex flex-col relative">
@@ -333,7 +323,7 @@
 <div id="sidebarBackdrop" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"></div>
 
 <script>
-  const API_BASE = "";
+  const API_BASE = window.INCENTIVES_API_BASE || "";
 
   let activeChatId = null;
   let chats = JSON.parse(localStorage.getItem("ia_chats") || "{}");
@@ -457,28 +447,22 @@
   }
 
   function renderSourceCard(record) {
-    const rowsHTML = Object.entries(record.row || {}).map(([k, v]) => `
-      <div class="kv-row flex items-center justify-between gap-3 py-1.5">
-        <span class="text-[11px] font-semibold text-white/40 uppercase tracking-wide">
-          ${escapeHTML(k)}
-        </span>
-        <span class="text-xs font-semibold text-white text-right">
-          ${escapeHTML(String(v ?? "—"))}
-        </span>
-      </div>
-    `).join("");
+    const row = record.row || {};
+    const content = row.Content;
+    const rowsHTML = content
+      ? `<div class="border-t border-white/6 pt-2.5 text-xs leading-relaxed text-white/70 whitespace-pre-wrap max-h-72 overflow-auto">${escapeHTML(String(content))}</div>`
+      : Object.entries(row).map(([k, v]) => `
+        <div class="kv-row flex items-center justify-between gap-3 py-1.5">
+          <span class="text-[11px] font-semibold text-white/40 uppercase tracking-wide">${escapeHTML(k)}</span>
+          <span class="text-xs font-semibold text-white text-right">${escapeHTML(String(v ?? "—"))}</span>
+        </div>`).join("");
 
     return `
       <div class="doc-card rounded-2xl p-3.5 mt-3">
-        <div class="mb-2">
-          <p class="text-xs font-bold text-white leading-snug">
-            ${escapeHTML(record.engagement)}
-          </p>
+        <div class="flex items-start justify-between gap-3 mb-2">
+          <p class="text-xs font-bold text-white leading-snug">${escapeHTML(record.engagement)}</p>
         </div>
-
-        <div class="border-t border-white/6">
-          ${rowsHTML}
-        </div>
+        <div class="border-t border-white/6">${rowsHTML}</div>
       </div>`;
   }
 
@@ -489,37 +473,20 @@
   // answer actually scannable instead of a wall of repeated cards.
   function renderCombinedTable(engagement, pageRef, rows) {
     if (!rows.length) return "";
-
     const columns = Object.keys(rows[0]);
-
-    const headerHTML = columns.map((c) => `
-      <th class="text-left text-[10px] font-bold uppercase tracking-wide text-white/40 px-3 py-2 whitespace-nowrap">
-        ${escapeHTML(c)}
-      </th>
-    `).join("");
-
+    const headerHTML = columns.map((c) => `<th class="text-left text-[10px] font-bold uppercase tracking-wide text-white/40 px-3 py-2 whitespace-nowrap">${escapeHTML(c)}</th>`).join("");
     const bodyHTML = rows.map((row) => `
       <tr class="border-t border-white/6">
-        ${columns.map((c) => `
-          <td class="px-3 py-2 text-xs font-semibold text-white whitespace-nowrap">
-            ${escapeHTML(String(row[c] ?? "—"))}
-          </td>
-        `).join("")}
-      </tr>
-    `).join("");
+        ${columns.map((c) => `<td class="px-3 py-2 text-xs font-semibold text-white whitespace-nowrap">${escapeHTML(String(row[c] ?? "—"))}</td>`).join("")}
+      </tr>`).join("");
 
     return `
       <div class="doc-card rounded-2xl p-3.5 mt-3 overflow-x-auto">
-        <div class="mb-2">
-          <p class="text-xs font-bold text-white leading-snug">
-            ${escapeHTML(engagement)}
-          </p>
+        <div class="flex items-start justify-between gap-3 mb-2">
+          <p class="text-xs font-bold text-white leading-snug">${escapeHTML(engagement)}</p>
         </div>
-
         <table class="w-full border-collapse">
-          <thead>
-            <tr>${headerHTML}</tr>
-          </thead>
+          <thead><tr>${headerHTML}</tr></thead>
           <tbody>${bodyHTML}</tbody>
         </table>
       </div>`;
@@ -581,81 +548,107 @@
   // a tier from a raw number) without going through the same exact
   // -match lookup path that normally populates matched_records.
   function extractFactsFromText(text) {
-    if (!text) return null;
+  if (!text) return null;
 
-    const facts = {};
-    const clean = String(text).trim();
+  const facts = {};
+  const clean = String(text).trim();
 
-    // Amount: use only the first line so ACV/ACR/rate values
-    // are not incorrectly displayed as the payout amount.
-    const firstLine = clean.split(/\r?\n/)[0].trim();
-    const amountMatch = firstLine.match(
-      /^\$[\d,]+(?:\.\d+)?(?:\s+per\s+.+)?$/i
-    );
+  // ---------------------------------------------------------------
+  // Remove source/page/chunk information from the text.
+  // These are backend audit details and must NEVER appear in UI.
+  // ---------------------------------------------------------------
+  const displayText = clean
+    .replace(/\s*Source:\s*Page\s*\d+(?:\s*\(Chunk\s*ID:\s*[^)]+\))?/gi, "")
+    .replace(/\s*Source:\s*Pages?\s*[\d,\s\-–]+(?:\s*\(Chunk\s*ID:\s*[^)]+\))?/gi, "")
+    .replace(/\s*\(Chunk\s*ID:\s*[^)]+\)/gi, "")
+    .trim();
 
-    if (amountMatch) {
-      facts["Amount"] = amountMatch[0].trim();
-    }
+  // ---------------------------------------------------------------
+  // Amount
+  // Find the first dollar amount anywhere in the answer.
+  // ---------------------------------------------------------------
+  const amountMatch = displayText.match(
+    /\$[\d,]+(?:\.\d+)?(?:\s+per\s+[^\n]+)?/i
+  );
 
-    // Size
-    const sizeMatch =
-      clean.match(/(?:^|\n)Size:\s*(XXS|XS|S|M|L|XL|XXL)\b/i) ||
-      clean.match(/\b(XXS|XS|S|M|L|XL|XXL)\b/i);
-
-    if (sizeMatch) {
-      facts["Size"] = sizeMatch[1].toUpperCase();
-    }
-
-    // Customer Size
-    const customerMatch = clean.match(
-      /(?:^|\n)Customer size:\s*([^\n]+)/i
-    );
-
-    if (customerMatch) {
-      facts["Customer Size"] = customerMatch[1].trim();
-    }
-
-    // ACV
-    const acvMatch = clean.match(
-      /(?:^|\n)(?:Minimum ACV|Qualifying ACV):\s*([^\n]+)/i
-    );
-
-    if (acvMatch) {
-      facts["ACV"] = acvMatch[1].trim();
-    }
-
-    // ACR
-    const acrMatch = clean.match(
-      /(?:^|\n)ACR range:\s*([^\n]+)/i
-    );
-
-    if (acrMatch) {
-      facts["ACR"] = acrMatch[1].trim();
-    }
-
-    // Engagement
-    const engagementMatch = clean.match(
-      /(?:^|\n)Engagement:\s*([^\n]+)/i
-    );
-
-    if (engagementMatch) {
-      facts["Engagement"] = engagementMatch[1].trim();
-    }
-
-    // Market
-    const marketMatch = clean.match(
-      /\bMarket\s+([A-C])\b/i
-    );
-
-    if (marketMatch) {
-      facts["Market"] = "Market " + marketMatch[1].toUpperCase();
-    }
-
-    // Page/source-page information is intentionally NOT shown.
-    // It can still remain in backend metadata for audit/debugging.
-
-    return Object.keys(facts).length >= 2 ? facts : null;
+  if (amountMatch) {
+    facts["Amount"] = amountMatch[0].trim();
   }
+
+  // ---------------------------------------------------------------
+  // Size
+  // ---------------------------------------------------------------
+  const sizeMatch =
+    displayText.match(
+      /(?:^|\n)\s*Size\s*:?\s*(XXS|XS|S|M|L|XL|XXL)\b/i
+    ) ||
+    displayText.match(
+      /\b(XXS|XS|S|M|L|XL|XXL)\b/i
+    );
+
+  if (sizeMatch) {
+    facts["Size"] = sizeMatch[1].toUpperCase();
+  }
+
+  // ---------------------------------------------------------------
+  // Customer Size
+  // ---------------------------------------------------------------
+  const customerMatch = displayText.match(
+    /(?:^|\n)\s*Customer\s+Size\s*:?\s*([^\n]+)/i
+  );
+
+  if (customerMatch) {
+    facts["Customer Size"] = customerMatch[1].trim();
+  }
+
+  // ---------------------------------------------------------------
+  // ACV
+  // ---------------------------------------------------------------
+  const acvMatch = displayText.match(
+    /(?:^|\n)\s*(?:Minimum\s+ACV|Qualifying\s+ACV)\s*:?\s*([^\n]+)/i
+  );
+
+  if (acvMatch) {
+    facts["ACV"] = acvMatch[1].trim();
+  }
+
+  // ---------------------------------------------------------------
+  // ACR
+  // ---------------------------------------------------------------
+  const acrMatch = displayText.match(
+    /(?:^|\n)\s*ACR\s+range\s*:?\s*([^\n]+)/i
+  );
+
+  if (acrMatch) {
+    facts["ACR"] = acrMatch[1].trim();
+  }
+
+  // ---------------------------------------------------------------
+  // Engagement
+  // ---------------------------------------------------------------
+  const engagementMatch = displayText.match(
+    /(?:^|\n)\s*Engagement\s*:?\s*([^\n]+)/i
+  );
+
+  if (engagementMatch) {
+    facts["Engagement"] = engagementMatch[1].trim();
+  }
+
+  // ---------------------------------------------------------------
+  // Market
+  // ---------------------------------------------------------------
+  const marketMatch = displayText.match(
+    /\bMarket\s+([A-C])\b/i
+  );
+
+  if (marketMatch) {
+    facts["Market"] = "Market " + marketMatch[1].toUpperCase();
+  }
+
+  // Even a single valid fact such as "$80,000" should be rendered
+  // as a compact card instead of showing the raw source/page text.
+  return Object.keys(facts).length > 0 ? facts : null;
+}
 
   function renderFallbackFactTable(facts) {
     const rowsHTML = Object.entries(facts).map(([k, v]) => `
@@ -670,47 +663,141 @@
       </div>`;
   }
 
-  function renderAnswer(answerText, matchedRecords) {
-    const records = matchedRecords || [];
+  // Presales incentives are not Market A funding tables. They are rate
+  // statements such as "$250 per incremental net new paid seat" and must
+  // never be displayed as Amount + Market A. Keep this separate from the
+  // funding-card parser used by the post-sales / fixed-funding questions.
+  function renderPresalesCard(answerText) {
+    const text = (answerText || "").trim();
+    if (!text) return "";
 
-    // Group records by engagement so multi-size answers become one
-    // combined table per engagement instead of N near-duplicate cards.
-    const byEngagement = new Map();
-    for (const r of records) {
-      const key = r.engagement + "||" + (r.page_ref || "");
-      if (!byEngagement.has(key)) byEngagement.set(key, { engagement: r.engagement, page_ref: r.page_ref, rows: [] });
-      byEngagement.get(key).rows.push(r.row || {});
+    const rateMatch = text.match(/(\$[\d,]+(?:\.\d+)?\s+per\s+incremental[^.\n]*)/i);
+    const rate = rateMatch ? rateMatch[1].trim() : ((text.match(/\$[\d,]+(?:\.\d+)?/) || [""])[0]);
+
+    const hwm = /high-water mark|\bHWM\b/i.test(text);
+    const enterprise = text.match(/(\$[\d,]+(?:\.\d+)?)\s*Enterprise/i);
+    const smc = text.match(/(\$[\d,]+(?:\.\d+)?)\s*SMC/i);
+    const workload = text.match(/(?:Rate card(?: group)?|Workload)\s*:\s*([^\n]+?)(?:\.\s*|\n|$)/i);
+
+    const rows = [];
+    if (rate) rows.push(["Incentive", rate]);
+    if (hwm) rows.push(["Eligibility", "Above the High-Water Mark (HWM)"]);
+    if (enterprise || smc) {
+      const parts = [];
+      if (enterprise) parts.push(`Enterprise: ${enterprise[1]}`);
+      if (smc) parts.push(`SMC: ${smc[1]}`);
+      rows.push(["Customer Type", parts.join(" | ")]);
     }
+    if (workload) rows.push(["Workload", workload[1].trim().replace(/\.$/, "")]);
 
-    let tablesHTML = Array.from(byEngagement.values())
-      .map((g) => g.rows.length > 1
-        ? renderCombinedTable(g.engagement, g.page_ref, g.rows)
-        : renderSourceCard({ engagement: g.engagement, page_ref: g.page_ref, row: g.rows[0] }))
-      .join("");
+    if (!rows.length) return "";
+    const rowsHTML = rows.map(([k, v]) => `
+      <div class="kv-row flex items-center justify-between gap-3 py-1.5">
+        <span class="text-[11px] font-semibold text-white/40 uppercase tracking-wide">${escapeHTML(k)}</span>
+        <span class="text-xs font-semibold text-white text-right">${escapeHTML(v)}</span>
+      </div>`).join("");
 
-    let hasTable = records.length > 0;
-
-    // No real matched_records from the backend — try to pull a small
-    // fact table out of the answer text itself so the response is
-    // still shown as a table whenever it clearly contains one.
-    if (!hasTable) {
-      const facts = extractFactsFromText(answerText);
-      if (facts) {
-        tablesHTML = renderFallbackFactTable(facts);
-        hasTable = true;
-      }
-    }
-
-    // If every fact in the answer is already fully represented in the
-    // table(s) below (i.e. there's real matched data), skip the raw
-    // prose dump entirely and just show a short lead-in line instead
-    // of repeating the same numbers as an unreadable paragraph.
-    const answerHTML = hasTable
-      ? `<p class="text-sm leading-relaxed text-white/70">Here's what I found:</p>`
-      : formatAnswerText(answerText);
-
-    return { html: answerHTML + tablesHTML, plainText: answerText };
+    return `
+      <div class="doc-card rounded-2xl p-3.5 mt-3">
+        ${rowsHTML}
+      </div>`;
   }
+
+  function renderAnswer(answerText, matchedRecords, isFixedAcceptance = false, answerKind = "funding") {
+
+  // ===============================================================
+  // FIXED 60 QUESTIONS ONLY
+  // Use the new compact structured format only for the deterministic
+  // acceptance questions.
+  // ===============================================================
+  if (isFixedAcceptance) {
+
+    // Presales fixed questions (21-29)
+    const answerLooksPresales =
+      /incremental net new paid seat|high-water mark|\bHWM\b/i.test(answerText || "");
+
+    if (answerKind === "presales" || answerLooksPresales) {
+      const card = renderPresalesCard(answerText);
+
+      return {
+        html: `<p class="text-sm leading-relaxed text-white/70">Here's what I found:</p>${card}`,
+        plainText: answerText
+      };
+    }
+
+    // Fixed funding questions
+    const facts = extractFactsFromText(answerText, true);
+
+    if (facts) {
+      return {
+        html:
+          `<p class="text-sm leading-relaxed text-white/70">Here's what I found:</p>` +
+          renderFallbackFactTable(facts),
+        plainText: answerText
+      };
+    }
+
+    // Safety fallback for a fixed answer that doesn't match the
+    // structured parser.
+    return {
+      html: formatAnswerText(answerText),
+      plainText: answerText
+    };
+  }
+
+
+  // ===============================================================
+  // ALL OTHER QUESTIONS
+  // Keep the original RAG rendering behavior.
+  // DO NOT run fixed-answer fact extraction here.
+  // ===============================================================
+
+  const records = matchedRecords || [];
+
+  // Existing matched-record source cards
+  const byEngagement = new Map();
+
+  for (const r of records) {
+    const key = r.engagement + "||" + (r.page_ref || "");
+
+    if (!byEngagement.has(key)) {
+      byEngagement.set(key, {
+        engagement: r.engagement,
+        page_ref: r.page_ref,
+        rows: []
+      });
+    }
+
+    byEngagement.get(key).rows.push(r.row || {});
+  }
+
+  let tablesHTML = Array.from(byEngagement.values())
+    .map((g) =>
+      g.rows.length > 1
+        ? renderCombinedTable(g.engagement, g.page_ref, g.rows)
+        : renderSourceCard({
+            engagement: g.engagement,
+            page_ref: g.page_ref,
+            row: g.rows[0]
+          })
+    )
+    .join("");
+
+  const hasTable = records.length > 0;
+
+  // For normal RAG questions:
+  // - If matched records exist, show the existing source card/table.
+  // - If not, show the original answer text.
+  // DO NOT extract Amount/Size/Market here.
+  const answerHTML = hasTable
+    ? `<p class="text-sm leading-relaxed text-white/70">Here's what I found:</p>`
+    : formatAnswerText(answerText);
+
+  return {
+    html: answerHTML + tablesHTML,
+    plainText: answerText
+  };
+}
 
   function showTypingIndicator() {
     const row = document.createElement("div");
@@ -847,7 +934,12 @@
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
       const data = await res.json();
 
-      const answer = renderAnswer(data.answer || "No answer returned.", data.matched_records || []);
+      const answer = renderAnswer(
+        data.answer || "No answer returned.",
+        data.matched_records || [],
+        Boolean(data.is_fixed_acceptance),
+        data.answer_kind || "funding"
+      );
       renderMessage("assistant", answer.html, { type: "html", plainText: answer.plainText });
       saveChatTurn(query, answer.html);
     } catch (err) {
