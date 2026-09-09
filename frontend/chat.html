@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Incentives Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,650;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
+          sans: ['Figtree', 'system-ui', 'sans-serif'],
+        },
+        colors: {
+          void: { black: '#08070c', ink: '#0f0d16', panel: '#141020', line: '#241f36' },
+          neon: { purple: '#b455ff', purpleBright: '#d18fff', green: '#39ff9a', greenBright: '#7dffbe' },
+        },
+        keyframes: {
+          fadeUp: { '0%': { opacity: '0', transform: 'translateY(14px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+          fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+          pulseDot: { '0%, 80%, 100%': { transform: 'scale(0.65)', opacity: '0.35' }, '40%': { transform: 'scale(1)', opacity: '1' } },
+          shimmer: { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },
+        },
+        animation: {
+          'fade-up': 'fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) both',
+          'fade-in': 'fadeIn 0.35s ease both',
+          'pulse-dot': 'pulseDot 1.2s infinite ease-in-out',
+          shimmer: 'shimmer 3s linear infinite',
+        },
+      },
+    },
+  };
+</script>
+<style>
+  html, body { height: 100%; }
+  body {
+    font-family: Figtree, system-ui, sans-serif;
+    background: #08070c;
+    color: #f4f2fb;
+    overflow: hidden;
+  }
+  .bg-field {
+    background:
+      radial-gradient(1000px 520px at 8% -10%, rgba(180,85,255,0.16), transparent 55%),
+      radial-gradient(820px 460px at 95% 8%, rgba(57,255,154,0.10), transparent 55%),
+      linear-gradient(160deg, #08070c 0%, #0b0912 45%, #0f0d16 100%);
+  }
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(180,85,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(180,85,255,0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 25%, transparent 75%);
+  }
+  .panel-glass { background: rgba(20,16,32,0.86); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+  .sidebar-glass { background: rgba(15,13,22,0.94); backdrop-filter: blur(20px); }
+
+  .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scroll-thin::-webkit-scrollbar-thumb { background: rgba(180,85,255,0.25); border-radius: 999px; }
+
+  .neon-text { color: #d18fff; text-shadow: 0 0 16px rgba(180,85,255,0.5), 0 0 36px rgba(180,85,255,0.2); }
+  .neon-text-green { color: #7dffbe; text-shadow: 0 0 16px rgba(57,255,154,0.45), 0 0 36px rgba(57,255,154,0.18); }
+
+  .btn-neon {
+    background: linear-gradient(135deg, #b455ff, #7c3aed);
+    box-shadow: 0 0 0 1px rgba(180,85,255,0.4) inset, 0 8px 24px -10px rgba(180,85,255,0.6);
+    transition: box-shadow 0.2s ease, transform 0.15s ease, filter 0.2s ease;
+  }
+  .btn-neon:hover { box-shadow: 0 0 0 1px rgba(180,85,255,0.6) inset, 0 10px 30px -8px rgba(180,85,255,0.8); filter: brightness(1.08); }
+  .btn-neon:active { transform: scale(0.97); }
+
+  .icon-btn {
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: rgba(244,242,251,0.8);
+    transition: all 0.2s ease;
+  }
+  .icon-btn:hover { border-color: rgba(180,85,255,0.45); color: #d18fff; background: rgba(180,85,255,0.08); }
+
+  .shimmer-text {
+    background: linear-gradient(100deg, #f4f2fb 25%, #d18fff 45%, #7dffbe 60%, #f4f2fb 80%);
+    background-size: 240% auto;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: shimmer 3.4s linear infinite;
+  }
+
+  .im-mark { position: relative; display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; }
+  .im-mark--lg { width: 64px; height: 64px; }
+  .im-mark-ring { position: absolute; inset: -6px; border-radius: 20px; border: 1px solid rgba(180,85,255,0.5); animation: imRing 2.6s ease-out infinite; }
+  .im-mark-ring2 { position: absolute; inset: -6px; border-radius: 20px; border: 1px solid rgba(57,255,154,0.3); animation: imRing 2.6s ease-out infinite 0.9s; }
+  @keyframes imRing { 0% { opacity: 0.8; transform: scale(0.9); } 70% { opacity: 0; transform: scale(1.16); } 100% { opacity: 0; transform: scale(1.16); } }
+  .im-mark-core {
+    position: relative; width: 100%; height: 100%; border-radius: 14px; overflow: hidden;
+    background: linear-gradient(160deg, #1a1626, #0a0810);
+    box-shadow: 0 0 0 1px rgba(180,85,255,0.35) inset, 0 10px 26px -12px rgba(180,85,255,0.55);
+    display: grid; place-items: center;
+  }
+  .im-mark-letters {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+    font-weight: 800; letter-spacing: -0.03em; line-height: 1; font-size: 0.9rem;
+    background: linear-gradient(135deg, #d18fff, #7dffbe);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .im-mark--lg .im-mark-letters { font-size: 1.35rem; }
+
+  .filter-chip {
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: rgba(244,242,251,0.65);
+    border-radius: 0.75rem;
+    padding: 0.3rem 0.7rem;
+    font-size: 11px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .filter-chip:hover { border-color: rgba(180,85,255,0.5); color: #d18fff; }
+  .filter-chip.active { background: linear-gradient(135deg, #b455ff, #7c3aed); color: #fff; border-color: transparent; }
+
+  .toast {
+    position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 80;
+    background: linear-gradient(135deg, #1a1626, #0f0d16);
+    border: 1px solid rgba(180,85,255,0.4);
+    color: #f4f2fb; padding: 0.7rem 1rem;
+    border-radius: 0.9rem; font-size: 0.8rem; font-weight: 600;
+    box-shadow: 0 12px 28px -16px rgba(180,85,255,0.5);
+    animation: fadeUp 0.35s ease both;
+  }
+
+  .doc-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .doc-card:hover { transform: translateY(-1px); border-color: rgba(57,255,154,0.4); box-shadow: 0 12px 24px -18px rgba(57,255,154,0.4); }
+
+  .typing-dot { animation: pulseDot 1.2s infinite ease-in-out; background: #d18fff; }
+  .typing-dot:nth-child(2) { animation-delay: 0.15s; background: #b455ff; }
+  .typing-dot:nth-child(3) { animation-delay: 0.3s; background: #7dffbe; }
+
+  .suggestion-chip {
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: rgba(244,242,251,0.85);
+    border-radius: 0.85rem;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: left;
+    transition: all 0.18s ease;
+  }
+  .suggestion-chip:hover { border-color: rgba(180,85,255,0.45); background: rgba(180,85,255,0.08); transform: translateY(-1px); }
+
+  .kv-row + .kv-row { border-top: 1px solid rgba(255,255,255,0.06); }
+
+  .input-neon {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.09);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .input-neon:focus-within { border-color: rgba(180,85,255,0.55); box-shadow: 0 0 0 4px rgba(180,85,255,0.12); }
+
+  .status-dot-live { background: #39ff9a; box-shadow: 0 0 0 4px rgba(57,255,154,0.2), 0 0 12px rgba(57,255,154,0.6); }
+  .status-dot-off { background: #ff5a7a; box-shadow: 0 0 0 4px rgba(255,90,122,0.18), 0 0 12px rgba(255,90,122,0.5); }
+
+  .copy-msg-btn { background: transparent; border: none; cursor: pointer; padding: 2px 0; }
+
+  .doc-card table { font-variant-numeric: tabular-nums; }
+  .doc-card th:first-child, .doc-card td:first-child { padding-left: 0; }
+</style>
+</head>
+<body class="antialiased">
+
+<div class="fixed inset-0 bg-field"></div>
+<div class="fixed inset-0 bg-grid"></div>
+
+<div id="app-shell" class="relative h-screen flex flex-col">
+  <div class="flex-1 min-h-0 flex">
+
+    <aside id="sidebar" class="sidebar-glass w-[280px] shrink-0 border-r border-void-line flex flex-col">
+      <div class="px-5 pt-5 pb-4 flex items-center justify-between gap-3">
+        <a href="index.html" class="flex items-center gap-3 min-w-0">
+          <div class="im-mark" aria-hidden="true">
+            <span class="im-mark-ring"></span>
+            <span class="im-mark-core"><span class="im-mark-letters">IA</span></span>
+          </div>
+          <div class="min-w-0">
+            <p class="font-display font-extrabold text-lg leading-none tracking-tight text-white truncate">Incentives</p>
+            <p class="text-[11px] font-medium text-white/45 mt-1 truncate">Partner rewards assistant</p>
+          </div>
+        </a>
+        <button id="sidebarCloseBtn" class="md:hidden h-9 w-9 rounded-xl icon-btn flex items-center justify-center" aria-label="Close sidebar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="px-4 mb-4">
+        <button id="newChatBtn" type="button" class="group w-full inline-flex items-center justify-center gap-2 rounded-2xl btn-neon text-white px-4 py-3 text-sm font-semibold tracking-tight transition-all duration-200 hover:-translate-y-0.5">
+          <svg class="transition-transform group-hover:rotate-90 duration-300" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          New conversation
+        </button>
+      </div>
+
+      <div class="px-4 flex-1 min-h-0 flex flex-col gap-4">
+        <div class="flex flex-col min-h-0 flex-1">
+          <div class="flex items-center justify-between mb-2 px-1">
+            <span class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/40">Saved chats</span>
+            <span id="chat-count" class="text-[11px] font-semibold neon-text-green">0</span>
+          </div>
+          <div id="savedChatsList" class="scroll-thin flex-1 overflow-y-auto space-y-1.5 pr-1">
+            <p id="savedChatsEmpty" class="text-xs text-white/30 px-2 py-3">No saved chats yet. Start a conversation and it'll show up here.</p>
+          </div>
+        </div>
+        <div class="shrink-0 pb-2">
+          <div class="flex items-center justify-between mb-2 px-1">
+            <span class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/40">Recent questions</span>
+            <button id="clearRecentBtn" type="button" class="text-[10px] font-semibold text-white/30 hover:text-neon-purpleBright transition">Clear</button>
+          </div>
+          <div id="recentSearchesList" class="space-y-1.5 max-h-36 overflow-y-auto scroll-thin pr-1">
+            <p id="recentEmpty" class="text-xs text-white/30 px-2 py-2">Nothing here yet.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section id="mainContent" class="flex-1 min-w-0 flex flex-col relative">
+      <header class="shrink-0 px-4 md:px-6 py-3.5 border-b border-void-line flex items-center justify-between gap-3 panel-glass">
+        <div class="flex items-center gap-3 min-w-0">
+          <button id="menuToggleBtn" class="md:hidden h-10 w-10 rounded-xl icon-btn flex items-center justify-center" aria-label="Open sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div class="min-w-0">
+            <h1 id="appTitle" class="font-display font-extrabold text-[1.05rem] md:text-lg tracking-tight text-white truncate">Partner Incentives Assistant</h1>
+            <p id="appSubtitle" class="text-xs text-white/45 font-medium truncate">Ask about payments, eligibility, and engagement tiers</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="clear-chat-btn" type="button" class="inline-flex items-center gap-2 rounded-xl icon-btn px-3 py-2 text-xs font-semibold">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+            <span class="hidden sm:inline">Clear</span>
+          </button>
+        </div>
+      </header>
+
+      <div id="demo-banner" class="hidden mx-4 md:mx-6 mt-4 rounded-2xl border border-neon-green/25 bg-neon-green/[0.06] px-4 py-3 animate-fade-up">
+        <div class="flex gap-3 items-start">
+          <div class="mt-0.5 neon-text-green">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+          </div>
+          <p id="demo-banner-text" class="text-sm text-white/75 leading-relaxed">
+            <strong class="font-semibold text-white">Not connected.</strong> This preview isn't wired to the workbook yet — connect the API to answer real questions.
+          </p>
+        </div>
+      </div>
+
+      <div id="chatBodyScroll" class="scroll-thin flex-1 overflow-y-auto">
+        <div id="welcome-stage" class="flex flex-col items-center justify-start sm:justify-center px-5 py-6 md:py-8 pb-10">
+          <div class="w-full max-w-2xl text-center animate-fade-up">
+            <div class="flex flex-col items-center mb-4">
+              <div class="im-mark im-mark--lg mb-3" aria-label="Incentives Assistant">
+                <span class="im-mark-ring"></span>
+                <span class="im-mark-ring2"></span>
+                <span class="im-mark-core"><span class="im-mark-letters">IA</span></span>
+              </div>
+              <div class="inline-flex items-center gap-2 rounded-full border border-neon-purple/30 bg-neon-purple/[0.08] px-3 py-1.5">
+                <span class="h-1.5 w-1.5 rounded-full bg-neon-green"></span>
+                <span class="text-[11px] font-bold uppercase tracking-[0.16em] neon-text">Measure and reward · FY27</span>
+              </div>
+            </div>
+
+            <p class="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-[0.95] mb-2">
+              Ask about<span class="shimmer-text"> your payout</span>
+            </p>
+            <h2 class="font-display text-xl md:text-2xl font-semibold tracking-tight text-white/80 mb-2">
+              Engagement sizes, eligibility, and market payments
+            </h2>
+            <p class="text-white/50 text-sm md:text-[0.95rem] max-w-xl mx-auto mb-6 leading-relaxed">
+              Name an engagement and a size to get an exact figure, straight from the workbook.
+            </p>
+
+            <div class="grid sm:grid-cols-2 gap-2.5 text-left">
+              <button type="button" class="suggestion-chip" data-suggest="What is the Market B payment for XXS under CSP ME3 Deployment Accelerator?">
+                Market B payment · XXS tier
+              </button>
+              <button type="button" class="suggestion-chip" data-suggest="What is the minimum hours requirement for size M under CSP ME3 Deployment Accelerator?">
+                Minimum hours · size M
+              </button>
+              <button type="button" class="suggestion-chip" data-suggest="What is the Market A payment for size L under Frontier Accelerate for Business Processes?">
+                Market A payment · size L
+              </button>
+              <button type="button" class="suggestion-chip" data-suggest="What is the customer eligibility for XXS under Frontier Accelerate for Copilot Envisioning and POC?">
+                Eligibility criteria · XXS tier
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="chat-messages" class="hidden px-4 md:px-8 py-6 space-y-6 max-w-4xl mx-auto w-full"></div>
+      </div>
+
+      <footer id="composer" class="shrink-0 border-t border-void-line panel-glass px-4 md:px-6 py-3.5">
+        <div class="max-w-4xl mx-auto">
+          <form id="chat-form" class="input-neon flex items-center gap-2 rounded-2xl px-2.5 py-2">
+            <input id="chat-input" type="text" required autocomplete="off"
+              placeholder="Ask about an engagement, size, or market payment…"
+              class="flex-1 bg-transparent border-0 outline-none text-sm md:text-[0.95rem] py-2.5 text-white placeholder:text-white/25" />
+            <button type="submit" class="h-10 w-10 rounded-xl btn-neon text-white flex items-center justify-center hover:scale-105 transition" title="Send" aria-label="Send question">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
+          </form>
+          <p class="text-center text-[10.5px] text-white/25 mt-2">Answers come from the workbook only — if it's not in the data, the assistant will say so.</p>
+        </div>
+      </footer>
+    </section>
+  </div>
+</div>
+
+<div id="sidebarBackdrop" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"></div>
+
+<script>
+  const API_BASE = window.INCENTIVES_API_BASE || "";
+
+  let activeChatId = null;
+  let chats = JSON.parse(localStorage.getItem("ia_chats") || "{}");
+  let recentSearches = JSON.parse(localStorage.getItem("ia_recent") || "[]");
+
+  const welcomeStage = document.getElementById("welcome-stage");
+  const messagesEl = document.getElementById("chat-messages");
+  const chatBodyScroll = document.getElementById("chatBodyScroll");
+  const chatForm = document.getElementById("chat-form");
+  const chatInput = document.getElementById("chat-input");
+  const statusDot = document.getElementById("status-dot");
+  const statusText = document.getElementById("status-text");
+  const demoBanner = document.getElementById("demo-banner");
+  const sidebar = document.getElementById("sidebar");
+  const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+  const savedChatsList = document.getElementById("savedChatsList");
+  const recentSearchesList = document.getElementById("recentSearchesList");
+  const chatCount = document.getElementById("chat-count");
+
+  function escapeHTML(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function getCurrentTime() {
+    return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function showToast(message) {
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2200);
+  }
+
+  function setWelcomeMode(showWelcome) {
+    welcomeStage.classList.toggle("hidden", !showWelcome);
+    messagesEl.classList.toggle("hidden", showWelcome);
+  }
+
+  function scrollToBottom() {
+    chatBodyScroll.scrollTop = chatBodyScroll.scrollHeight;
+  }
+
+  function openSidebar() {
+    sidebar.classList.add("fixed", "inset-y-0", "left-0", "z-50");
+    sidebarBackdrop.classList.remove("hidden");
+  }
+  function closeSidebar() {
+    sidebar.classList.remove("fixed", "inset-y-0", "left-0", "z-50");
+    sidebarBackdrop.classList.add("hidden");
+  }
+  document.getElementById("menuToggleBtn").addEventListener("click", openSidebar);
+  document.getElementById("sidebarCloseBtn").addEventListener("click", closeSidebar);
+  sidebarBackdrop.addEventListener("click", closeSidebar);
+
+  function renderMessage(sender, content, opts = {}) {
+    setWelcomeMode(false);
+    const row = document.createElement("div");
+    row.className = "flex gap-3 animate-fade-up " + (sender === "user" ? "flex-row-reverse" : "");
+
+    const avatar = sender === "user"
+      ? `<div class="h-9 w-9 rounded-full bg-white/[0.06] border border-white/10 text-white/80 flex items-center justify-center text-xs font-bold shrink-0">You</div>`
+      : `<div class="im-mark shrink-0" style="width:36px;height:36px" aria-hidden="true"><span class="im-mark-core"><span class="im-mark-letters" style="font-size:0.68rem">IA</span></span></div>`;
+
+    let bubbleInner;
+    if (opts.type === "html") {
+      bubbleInner = content;
+    } else {
+      bubbleInner = `<p class="text-sm leading-relaxed">${escapeHTML(content)}</p>`;
+    }
+
+    const bubbleTone = sender === "user"
+      ? "btn-neon text-white rounded-2xl rounded-tr-md"
+      : "bg-white/[0.03] border border-white/8 text-white rounded-2xl rounded-tl-md";
+
+    // Copy button only on assistant messages — copies the plain-text
+    // version (opts.plainText if given, else the visible text content)
+    // so pasting elsewhere doesn't carry HTML markup with it.
+    const copyButton = sender === "assistant"
+      ? `<button type="button" class="copy-msg-btn mt-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-white/35 hover:text-neon-purpleBright transition" title="Copy response">
+          <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="check-icon hidden" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>
+          <span class="copy-label">Copy</span>
+        </button>`
+      : "";
+
+    row.innerHTML = `
+      ${avatar}
+      <div class="max-w-[min(100%,42rem)] w-full ${bubbleTone} px-4 py-3">
+        ${bubbleInner}
+        <div class="mt-2 flex items-center ${sender === "user" ? "justify-end" : "justify-between"} gap-3">
+          ${sender === "assistant" ? copyButton : ""}
+          <div class="text-[10px] ${sender === "user" ? "text-white/50" : "text-white/30"}">${opts.time || getCurrentTime()}</div>
+        </div>
+      </div>`;
+
+    if (sender === "assistant") {
+      const btn = row.querySelector(".copy-msg-btn");
+      const bubbleEl = row.querySelector(".max-w-\\[min\\(100\\%\\,42rem\\)\\]");
+      btn.addEventListener("click", () => {
+        const plainText = opts.plainText || bubbleEl.innerText.replace(/\s*Copy\s*$/, "").trim();
+        navigator.clipboard.writeText(plainText).then(() => {
+          btn.querySelector(".copy-icon").classList.add("hidden");
+          btn.querySelector(".check-icon").classList.remove("hidden");
+          btn.querySelector(".copy-label").textContent = "Copied";
+          setTimeout(() => {
+            btn.querySelector(".copy-icon").classList.remove("hidden");
+            btn.querySelector(".check-icon").classList.add("hidden");
+            btn.querySelector(".copy-label").textContent = "Copy";
+          }, 1600);
+        }).catch(() => showToast("Couldn't copy — try selecting the text manually"));
+      });
+    }
+
+    messagesEl.appendChild(row);
+    scrollToBottom();
+    return row;
+  }
+
+  function renderSourceCard(record) {
+    const row = record.row || {};
+    const content = row.Content;
+    const rowsHTML = content
+      ? `<div class="border-t border-white/6 pt-2.5 text-xs leading-relaxed text-white/70 whitespace-pre-wrap max-h-72 overflow-auto">${escapeHTML(String(content))}</div>`
+      : Object.entries(row).map(([k, v]) => `
+        <div class="kv-row flex items-center justify-between gap-3 py-1.5">
+          <span class="text-[11px] font-semibold text-white/40 uppercase tracking-wide">${escapeHTML(k)}</span>
+          <span class="text-xs font-semibold text-white text-right">${escapeHTML(String(v ?? "—"))}</span>
+        </div>`).join("");
+
+    return `
+      <div class="doc-card rounded-2xl p-3.5 mt-3">
+        <div class="flex items-start justify-between gap-3 mb-2">
+          <p class="text-xs font-bold text-white leading-snug">${escapeHTML(record.engagement)}</p>
+        </div>
+        <div class="border-t border-white/6">${rowsHTML}</div>
+      </div>`;
+  }
+
+  // When multiple records share the same engagement (e.g. a question
+  // that returned every size — XXS through L — in one answer), render
+  // ONE combined table with a row per size instead of stacking several
+  // near-duplicate single-row cards. This is what makes a multi-size
+  // answer actually scannable instead of a wall of repeated cards.
+  function renderCombinedTable(engagement, pageRef, rows) {
+    if (!rows.length) return "";
+    const columns = Object.keys(rows[0]);
+    const headerHTML = columns.map((c) => `<th class="text-left text-[10px] font-bold uppercase tracking-wide text-white/40 px-3 py-2 whitespace-nowrap">${escapeHTML(c)}</th>`).join("");
+    const bodyHTML = rows.map((row) => `
+      <tr class="border-t border-white/6">
+        ${columns.map((c) => `<td class="px-3 py-2 text-xs font-semibold text-white whitespace-nowrap">${escapeHTML(String(row[c] ?? "—"))}</td>`).join("")}
+      </tr>`).join("");
+
+    return `
+      <div class="doc-card rounded-2xl p-3.5 mt-3 overflow-x-auto">
+        <div class="flex items-start justify-between gap-3 mb-2">
+          <p class="text-xs font-bold text-white leading-snug">${escapeHTML(engagement)}</p>
+        </div>
+        <table class="w-full border-collapse">
+          <thead><tr>${headerHTML}</tr></thead>
+          <tbody>${bodyHTML}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // Convert a raw answer string into short, scannable bullet points
+  // when it reads like several facts strung together (long, with many
+  // " - " or " | " separators or several sentences) rather than a
+  // single short sentence. Short single-fact answers stay as plain
+  // prose — bulleting a one-line answer just adds visual noise.
+  function formatAnswerText(answerText) {
+    const text = (answerText || "").trim();
+    if (!text) return "";
+
+    const looksLikeSingleFact = text.length < 140 && (text.match(/[.!?]/g) || []).length <= 1;
+    if (looksLikeSingleFact) {
+      return `<p class="text-sm leading-relaxed">${escapeHTML(text)}</p>`;
+    }
+
+    // If the text already contains an explicit bullet/dash list (common
+    // for clarifying-question responses: a framing sentence followed by
+    // "- Option A\n- Option B"), keep the framing sentence as prose and
+    // only bullet the actual list lines, rather than splitting the
+    // framing sentence itself into fragments.
+    const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+    const listLineRe = /^[-•]\s*/;
+    const listLines = lines.filter((l) => listLineRe.test(l));
+    const proseLines = lines.filter((l) => !listLineRe.test(l));
+
+    if (listLines.length >= 2) {
+      const proseHTML = proseLines.map((l) => `<p class="text-sm leading-relaxed mb-2">${escapeHTML(l)}</p>`).join("");
+      const itemsHTML = listLines.map((l) => `<li class="text-sm leading-relaxed pl-1">${escapeHTML(l.replace(listLineRe, ""))}</li>`).join("");
+      return `${proseHTML}<ul class="list-disc list-outside ml-4 space-y-1.5">${itemsHTML}</ul>`;
+    }
+
+    // Otherwise: split on sentence boundaries and on " - " used as a
+    // clause separator (seen in current backend output stringing
+    // multiple facts together with dashes rather than real sentences).
+    const parts = text
+      .split(/(?<=[.!?])\s+(?=[A-Z])|\s+-\s+(?=[A-Z])/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    if (parts.length <= 1) {
+      return `<p class="text-sm leading-relaxed">${escapeHTML(text)}</p>`;
+    }
+
+    const items = parts.map((p) => `<li class="text-sm leading-relaxed pl-1">${escapeHTML(p.replace(/^-\s*/, ""))}</li>`).join("");
+    return `<ul class="list-disc list-outside ml-4 space-y-1.5">${items}</ul>`;
+  }
+
+  // Fallback: when the backend doesn't return matched_records (or
+  // returns an empty list) but the answer text clearly cites specific
+  // structured facts — a dollar figure, a page number, a size/tier —
+  // pull those out and render a small table anyway, rather than only
+  // ever showing a table when matched_records happens to be populated.
+  // This covers cases like "customer has 500 Copilot users, what's the
+  // payout" where the backend reasoned its way to an answer (inferring
+  // a tier from a raw number) without going through the same exact
+  // -match lookup path that normally populates matched_records.
+  function extractFactsFromText(text, forceMarketA = false) {
+    if (!text) return null;
+
+    const facts = {};
+    const clean = String(text).trim();
+
+    // The first line of fixed funding answers is the payout Amount.
+    // Do NOT collect every dollar expression from the whole answer: later
+    // lines may contain ACV/ACR thresholds, customer criteria, or other
+    // rates, and merging those into Amount makes the card incorrect.
+    const firstLine = clean.split(/\r?\n/)[0].trim();
+    const amountMatch = firstLine.match(/^\$[\d,]+(?:\.\d+)?(?:\s+per\s+.+)?$/i);
+    if (amountMatch) facts["Amount"] = amountMatch[0].trim();
+
+    const sizeMatch = clean.match(/(?:^|\n)Size:\s*(XXS|XS|S|M|L|XL|XXL)\b/i) ||
+                      clean.match(/\b(XXS|XS|S|M|L|XL|XXL)\b/i);
+    if (sizeMatch) facts["Size"] = sizeMatch[1].toUpperCase();
+
+    const customerMatch = clean.match(/(?:^|\n)Customer size:\s*([^\n]+)/i);
+    if (customerMatch) facts["Customer Size"] = customerMatch[1].trim();
+
+    const acvMatch = clean.match(/(?:^|\n)(?:Minimum ACV|Qualifying ACV):\s*([^\n]+)/i);
+    if (acvMatch) facts["ACV"] = acvMatch[1].trim();
+
+    const acrMatch = clean.match(/(?:^|\n)ACR range:\s*([^\n]+)/i);
+    if (acrMatch) facts["ACR"] = acrMatch[1].trim();
+
+    const engagementMatch = clean.match(/(?:^|\n)Engagement:\s*([^\n]+)/i);
+    if (engagementMatch) facts["Engagement"] = engagementMatch[1].trim();
+
+    const marketMatch = clean.match(/\bMarket\s+([A-C])\b/i);
+    if (marketMatch) facts["Market"] = "Market " + marketMatch[1].toUpperCase();
+    else if (forceMarketA) facts["Market"] = "Market A";
+
+    // A fixed acceptance answer is intentionally a compact structured
+    // response. Show every field that is present in that answer rather than
+    // reducing it to only Amount/Size/Market.
+    return Object.keys(facts).length >= 2 ? facts : null;
+  }
+
+  function renderFallbackFactTable(facts) {
+    const rowsHTML = Object.entries(facts).map(([k, v]) => `
+      <div class="kv-row flex items-center justify-between gap-3 py-1.5">
+        <span class="text-[11px] font-semibold text-white/40 uppercase tracking-wide">${escapeHTML(k)}</span>
+        <span class="text-xs font-semibold text-white text-right">${escapeHTML(String(v))}</span>
+      </div>`).join("");
+
+    return `
+      <div class="doc-card rounded-2xl p-3.5 mt-3">
+        <div class="border-t-0">${rowsHTML}</div>
+      </div>`;
+  }
+
+  // Presales incentives are not Market A funding tables. They are rate
+  // statements such as "$250 per incremental net new paid seat" and must
+  // never be displayed as Amount + Market A. Keep this separate from the
+  // funding-card parser used by the post-sales / fixed-funding questions.
+  function renderPresalesCard(answerText) {
+    const text = (answerText || "").trim();
+    if (!text) return "";
+
+    const rateMatch = text.match(/(\$[\d,]+(?:\.\d+)?\s+per\s+incremental[^.\n]*)/i);
+    const rate = rateMatch ? rateMatch[1].trim() : ((text.match(/\$[\d,]+(?:\.\d+)?/) || [""])[0]);
+
+    const hwm = /high-water mark|\bHWM\b/i.test(text);
+    const enterprise = text.match(/(\$[\d,]+(?:\.\d+)?)\s*Enterprise/i);
+    const smc = text.match(/(\$[\d,]+(?:\.\d+)?)\s*SMC/i);
+    const workload = text.match(/(?:Rate card(?: group)?|Workload)\s*:\s*([^\n]+?)(?:\.\s*|\n|$)/i);
+
+    const rows = [];
+    if (rate) rows.push(["Incentive", rate]);
+    if (hwm) rows.push(["Eligibility", "Above the High-Water Mark (HWM)"]);
+    if (enterprise || smc) {
+      const parts = [];
+      if (enterprise) parts.push(`Enterprise: ${enterprise[1]}`);
+      if (smc) parts.push(`SMC: ${smc[1]}`);
+      rows.push(["Customer Type", parts.join(" | ")]);
+    }
+    if (workload) rows.push(["Workload", workload[1].trim().replace(/\.$/, "")]);
+
+    if (!rows.length) return "";
+    const rowsHTML = rows.map(([k, v]) => `
+      <div class="kv-row flex items-center justify-between gap-3 py-1.5">
+        <span class="text-[11px] font-semibold text-white/40 uppercase tracking-wide">${escapeHTML(k)}</span>
+        <span class="text-xs font-semibold text-white text-right">${escapeHTML(v)}</span>
+      </div>`).join("");
+
+    return `
+      <div class="doc-card rounded-2xl p-3.5 mt-3">
+        ${rowsHTML}
+      </div>`;
+  }
+
+  function renderAnswer(answerText, matchedRecords, isFixedAcceptance = false, answerKind = "funding") {
+    // Presales answers use a different fact card: there is no Market A
+    // dimension unless the source explicitly says so. Infer this from the
+    // answer as a safety net too, so an older/misconfigured backend cannot
+    // turn a presales rate into a fake Amount + Market A card.
+    const answerLooksPresales = /incremental net new paid seat|high-water mark|\bHWM\b/i.test(answerText || "");
+    if (answerKind === "presales" || answerLooksPresales) {
+      const card = renderPresalesCard(answerText);
+      return {
+        html: `<p class="text-sm leading-relaxed text-white/70">Here's what I found:</p>${card}`,
+        plainText: answerText
+      };
+    }
+
+    const records = matchedRecords || [];
+
+    // Group records by engagement so multi-size answers become one
+    // combined table per engagement instead of N near-duplicate cards.
+    const byEngagement = new Map();
+    for (const r of records) {
+      const key = r.engagement + "||" + (r.page_ref || "");
+      if (!byEngagement.has(key)) byEngagement.set(key, { engagement: r.engagement, page_ref: r.page_ref, rows: [] });
+      byEngagement.get(key).rows.push(r.row || {});
+    }
+
+    let tablesHTML = Array.from(byEngagement.values())
+      .map((g) => g.rows.length > 1
+        ? renderCombinedTable(g.engagement, g.page_ref, g.rows)
+        : renderSourceCard({ engagement: g.engagement, page_ref: g.page_ref, row: g.rows[0] }))
+      .join("");
+
+    let hasTable = records.length > 0;
+
+    // No real matched_records from the backend — try to pull a small
+    // fact table out of the answer text itself so the response is
+    // still shown as a table whenever it clearly contains one.
+    if (!hasTable) {
+      const facts = extractFactsFromText(answerText, isFixedAcceptance);
+      if (facts) {
+        tablesHTML = renderFallbackFactTable(facts);
+        hasTable = true;
+      }
+    }
+
+    // If every fact in the answer is already fully represented in the
+    // table(s) below (i.e. there's real matched data), skip the raw
+    // prose dump entirely and just show a short lead-in line instead
+    // of repeating the same numbers as an unreadable paragraph.
+    const answerHTML = hasTable
+      ? `<p class="text-sm leading-relaxed text-white/70">Here's what I found:</p>`
+      : formatAnswerText(answerText);
+
+    return { html: answerHTML + tablesHTML, plainText: answerText };
+  }
+
+  function showTypingIndicator() {
+    const row = document.createElement("div");
+    row.id = "typingIndicatorRow";
+    row.className = "flex gap-3 animate-fade-up";
+    row.innerHTML = `
+      <div class="im-mark shrink-0" style="width:36px;height:36px" aria-hidden="true"><span class="im-mark-core"><span class="im-mark-letters" style="font-size:0.68rem">IA</span></span></div>
+      <div class="bg-white/[0.03] border border-white/8 rounded-2xl rounded-tl-md px-4 py-3.5 flex items-center gap-1.5">
+        <span class="typing-dot h-1.5 w-1.5 rounded-full"></span>
+        <span class="typing-dot h-1.5 w-1.5 rounded-full"></span>
+        <span class="typing-dot h-1.5 w-1.5 rounded-full"></span>
+      </div>`;
+    messagesEl.appendChild(row);
+    scrollToBottom();
+  }
+  function removeTypingIndicator() {
+    const row = document.getElementById("typingIndicatorRow");
+    if (row) row.remove();
+  }
+
+  function saveRecentSearch(query) {
+    recentSearches = [query, ...recentSearches.filter((q) => q !== query)].slice(0, 8);
+    localStorage.setItem("ia_recent", JSON.stringify(recentSearches));
+    renderRecentSearches();
+  }
+
+  function renderRecentSearches() {
+    const emptyEl = document.getElementById("recentEmpty");
+    recentSearchesList.querySelectorAll("[data-recent-item]").forEach((n) => n.remove());
+    if (!recentSearches.length) {
+      emptyEl.classList.remove("hidden");
+      return;
+    }
+    emptyEl.classList.add("hidden");
+    recentSearches.forEach((q) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.dataset.recentItem = "true";
+      btn.className = "w-full text-left text-xs text-white/55 hover:text-neon-purpleBright hover:bg-white/[0.04] rounded-xl px-2.5 py-2 transition truncate";
+      btn.textContent = q;
+      btn.title = q;
+      btn.addEventListener("click", () => runQuery(q));
+      recentSearchesList.appendChild(btn);
+    });
+  }
+
+  document.getElementById("clearRecentBtn").addEventListener("click", () => {
+    recentSearches = [];
+    localStorage.setItem("ia_recent", JSON.stringify(recentSearches));
+    renderRecentSearches();
+  });
+
+  function saveChatTurn(question, answerHTML) {
+    if (!activeChatId) activeChatId = "chat_" + Date.now();
+    if (!chats[activeChatId]) {
+      chats[activeChatId] = { title: question.slice(0, 48), turns: [] };
+    }
+    chats[activeChatId].turns.push({ question, answerHTML, time: getCurrentTime() });
+    localStorage.setItem("ia_chats", JSON.stringify(chats));
+    renderSavedChats();
+  }
+
+  function renderSavedChats() {
+    const ids = Object.keys(chats);
+    chatCount.textContent = ids.length;
+    const emptyEl = document.getElementById("savedChatsEmpty");
+    savedChatsList.querySelectorAll("[data-chat-item]").forEach((n) => n.remove());
+    if (!ids.length) {
+      emptyEl.classList.remove("hidden");
+      return;
+    }
+    emptyEl.classList.add("hidden");
+    ids.slice().reverse().forEach((id) => {
+      const chat = chats[id];
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.dataset.chatItem = "true";
+      btn.className = "w-full text-left rounded-xl px-2.5 py-2 hover:bg-white/[0.04] transition group " + (id === activeChatId ? "bg-neon-purple/[0.1]" : "");
+      btn.innerHTML = `<p class="text-xs font-semibold text-white truncate">${escapeHTML(chat.title)}</p>
+        <p class="text-[10px] text-white/35 mt-0.5">${chat.turns.length} message${chat.turns.length === 1 ? "" : "s"}</p>`;
+      btn.addEventListener("click", () => loadChat(id));
+      savedChatsList.appendChild(btn);
+    });
+  }
+
+  function loadChat(id) {
+    const chat = chats[id];
+    if (!chat) return;
+    activeChatId = id;
+    messagesEl.innerHTML = "";
+    setWelcomeMode(false);
+    chat.turns.forEach((t) => {
+      renderMessage("user", t.question, { time: t.time });
+      renderMessage("assistant", t.answerHTML, { type: "html", time: t.time });
+    });
+    renderSavedChats();
+    closeSidebar();
+  }
+
+  document.getElementById("newChatBtn").addEventListener("click", () => {
+    activeChatId = null;
+    messagesEl.innerHTML = "";
+    setWelcomeMode(true);
+    renderSavedChats();
+    closeSidebar();
+  });
+
+  document.getElementById("clear-chat-btn").addEventListener("click", () => {
+    activeChatId = null;
+    messagesEl.innerHTML = "";
+    setWelcomeMode(true);
+    showToast("Conversation cleared");
+  });
+
+  document.querySelectorAll("[data-suggest]").forEach((btn) => {
+    btn.addEventListener("click", () => runQuery(btn.dataset.suggest));
+  });
+
+  async function runQuery(query) {
+    if (!query) return;
+    setWelcomeMode(false);
+    renderMessage("user", query);
+    saveRecentSearch(query);
+    showTypingIndicator();
+
+    try {
+      const res = await fetch(`${API_BASE}/api/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: query }),
+      });
+      removeTypingIndicator();
+
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      const data = await res.json();
+
+      const answer = renderAnswer(
+        data.answer || "No answer returned.",
+        data.matched_records || [],
+        Boolean(data.is_fixed_acceptance),
+        data.answer_kind || "funding"
+      );
+      renderMessage("assistant", answer.html, { type: "html", plainText: answer.plainText });
+      saveChatTurn(query, answer.html);
+    } catch (err) {
+      removeTypingIndicator();
+      const fallbackHTML = `<p class="text-sm leading-relaxed text-rose-300">Couldn't reach the assistant. ${escapeHTML(err.message || "")} Check that the API is running and try again.</p>`;
+      renderMessage("assistant", fallbackHTML, { type: "html" });
+    }
+  }
+
+  chatForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const q = chatInput.value.trim();
+    if (!q) return;
+    chatInput.value = "";
+    runQuery(q);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "/" && document.activeElement !== chatInput) {
+      e.preventDefault();
+      chatInput.focus();
+    }
+  });
+
+  async function checkStatus() {
+    try {
+      const res = await fetch(`${API_BASE}/api/status`);
+      if (!res.ok) throw new Error("status failed");
+      const data = await res.json();
+      statusDot.className = "h-2.5 w-2.5 rounded-full status-dot-live";
+      statusText.textContent = `Live · ${data.engagement_count ?? "?"} engagements loaded`;
+      demoBanner.classList.add("hidden");
+    } catch {
+      statusDot.className = "h-2.5 w-2.5 rounded-full status-dot-off";
+      statusText.textContent = "API not connected";
+      demoBanner.classList.remove("hidden");
+    }
+  }
+
+  renderRecentSearches();
+  renderSavedChats();
+  checkStatus();
+</script>
+</body>
+</html>
