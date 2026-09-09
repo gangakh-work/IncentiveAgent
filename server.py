@@ -9,10 +9,15 @@ existing CLI pipeline over HTTP so the frontend can call it.
 Run:
     uvicorn server:app --host 0.0.0.0 --port 8000
 """
+import sys
+
+if sys.platform.startswith("linux"):
+    import pysqlite3
+    sys.modules["sqlite3"] = pysqlite3
 
 import logging
 import os
-import sys
+
 
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 
