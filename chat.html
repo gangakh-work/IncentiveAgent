@@ -185,10 +185,9 @@
     <aside id="sidebar" class="sidebar-glass w-[280px] shrink-0 border-r border-void-line flex flex-col">
       <div class="px-5 pt-5 pb-4 flex items-center justify-between gap-3">
         <a href="index.html" class="flex items-center gap-3 min-w-0">
-          <div class="im-mark" aria-hidden="true">
-            <span class="im-mark-ring"></span>
-            <span class="im-mark-core"><span class="im-mark-letters">IA</span></span>
-          </div>
+          <img src="/logo.png"
+              alt="Incentives Assistant"
+              style="width:40px;height:40px;object-fit:contain;">
           <div class="min-w-0">
             <p class="font-display font-extrabold text-lg leading-none tracking-tight text-white truncate">Incentives</p>
             <p class="text-[11px] font-medium text-white/45 mt-1 truncate">Partner rewards assistant</p>
@@ -262,11 +261,9 @@
         <div id="welcome-stage" class="flex flex-col items-center justify-start sm:justify-center px-5 py-6 md:py-8 pb-10">
           <div class="w-full max-w-2xl text-center animate-fade-up">
             <div class="flex flex-col items-center mb-4">
-              <div class="im-mark im-mark--lg mb-3" aria-label="Incentives Assistant">
-                <span class="im-mark-ring"></span>
-                <span class="im-mark-ring2"></span>
-                <span class="im-mark-core"><span class="im-mark-letters">IA</span></span>
-              </div>
+              <img src="/logo.png"
+                   alt="Incentives Assistant"
+                   style="width:64px;height:64px;object-fit:contain;">
               <div class="inline-flex items-center gap-2 rounded-full border border-neon-purple/30 bg-neon-purple/[0.08] px-3 py-1.5">
                 <span class="h-1.5 w-1.5 rounded-full bg-neon-green"></span>
                 <span class="text-[11px] font-bold uppercase tracking-[0.16em] neon-text">Measure and reward · FY27</span>
@@ -389,7 +386,9 @@
 
     const avatar = sender === "user"
       ? `<div class="h-9 w-9 rounded-full bg-white/[0.06] border border-white/10 text-white/80 flex items-center justify-center text-xs font-bold shrink-0">You</div>`
-      : `<div class="im-mark shrink-0" style="width:36px;height:36px" aria-hidden="true"><span class="im-mark-core"><span class="im-mark-letters" style="font-size:0.68rem">IA</span></span></div>`;
+      : `<img src="/logo.png"
+     alt="IA"
+     style="width:36px;height:36px;object-fit:contain;">`;
 
     let bubbleInner;
     if (opts.type === "html") {
@@ -768,7 +767,9 @@
     row.id = "typingIndicatorRow";
     row.className = "flex gap-3 animate-fade-up";
     row.innerHTML = `
-      <div class="im-mark shrink-0" style="width:36px;height:36px" aria-hidden="true"><span class="im-mark-core"><span class="im-mark-letters" style="font-size:0.68rem">IA</span></span></div>
+      <img src="/logo.png"
+     alt="IA"
+     style="width:36px;height:36px;object-fit:contain;">
       <div class="bg-white/[0.03] border border-white/8 rounded-2xl rounded-tl-md px-4 py-3.5 flex items-center gap-1.5">
         <span class="typing-dot h-1.5 w-1.5 rounded-full"></span>
         <span class="typing-dot h-1.5 w-1.5 rounded-full"></span>
