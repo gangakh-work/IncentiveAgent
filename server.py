@@ -11,11 +11,6 @@ Run:
 """
 import sys
 
-if sys.platform.startswith("linux"):
-    import pysqlite3
-    
-    sys.modules["sqlite3"] = pysqlite3
-
 import logging
 import os
 
