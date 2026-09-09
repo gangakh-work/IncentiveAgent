@@ -23,7 +23,7 @@ os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 import config
@@ -180,20 +180,13 @@ def ask_question(request: AskRequest):
 
 
 # -------------------------------------------------------------------
-# Optional: serve a frontend from the same origin if a "frontend"
-# folder is present next to this file. Set FRONTEND_DIR in .env to
-# point elsewhere, or omit it entirely if you're hosting the frontend
-# separately and only need the API.
+# Serve the frontend from the project root
 # -------------------------------------------------------------------
 
-_configured_frontend = os.getenv("FRONTEND_DIR", "")
-if _configured_frontend:
-    FRONTEND_DIR = os.path.abspath(_configured_frontend)
-else:
-    FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CHAT_HTML = os.path.join(BASE_DIR, "chat.html")
 
-if os.path.isdir(FRONTEND_DIR):
-    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
-    logger.info(f"Serving frontend from {FRONTEND_DIR}")
-else:
-    logger.info(f"No frontend directory found at {FRONTEND_DIR} — running API-only.")
+
+@app.get("/", include_in_schema=False)
+def index():
+    return FileResponse(CHAT_HTML)
