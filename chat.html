@@ -547,108 +547,47 @@
   // payout" where the backend reasoned its way to an answer (inferring
   // a tier from a raw number) without going through the same exact
   // -match lookup path that normally populates matched_records.
-  function extractFactsFromText(text) {
-  if (!text) return null;
+  // Extract only useful business facts for the compact response card.
+  // Page numbers, chunk IDs, and source metadata are intentionally ignored.
+  function extractFactsFromText(text, forceMarketA = false) {
+    if (!text) return null;
 
-  const facts = {};
-  const clean = String(text).trim();
+    const facts = {};
+    const clean = String(text).trim();
 
-  // ---------------------------------------------------------------
-  // Remove source/page/chunk information from the text.
-  // These are backend audit details and must NEVER appear in UI.
-  // ---------------------------------------------------------------
-  const displayText = clean
-    .replace(/\s*Source:\s*Page\s*\d+(?:\s*\(Chunk\s*ID:\s*[^)]+\))?/gi, "")
-    .replace(/\s*Source:\s*Pages?\s*[\d,\s\-–]+(?:\s*\(Chunk\s*ID:\s*[^)]+\))?/gi, "")
-    .replace(/\s*\(Chunk\s*ID:\s*[^)]+\)/gi, "")
-    .trim();
+    // Remove source/page metadata before parsing the answer.
+    const displayText = clean
+      .replace(/\s*Source\s*:\s*Page\s+\d+(?:\s*\(\s*Chunk\s+ID\s*:\s*[^)]+\))?/gi, "")
+      .replace(/\bPage[s]?\s+\d+(?:\s*,\s*\d+)*\b/gi, "")
+      .replace(/\bChunk\s+ID\s*:\s*[^,\n)]+/gi, "")
+      .trim();
 
-  // ---------------------------------------------------------------
-  // Amount
-  // Find the first dollar amount anywhere in the answer.
-  // ---------------------------------------------------------------
-  const amountMatch = displayText.match(
-    /\$[\d,]+(?:\.\d+)?(?:\s+per\s+[^\n]+)?/i
-  );
+    const firstLine = displayText.split(/\r?\n/)[0].trim();
+    const amountMatch = firstLine.match(/^\$[\d,]+(?:\.\d+)?(?:\s+per\s+.+)?$/i);
+    if (amountMatch) facts["Amount"] = amountMatch[0].trim();
 
-  if (amountMatch) {
-    facts["Amount"] = amountMatch[0].trim();
+    const sizeMatch = displayText.match(/(?:^|\n)Size:\s*(XXS|XS|S|M|L|XL|XXL)\b/i) ||
+                      displayText.match(/\b(XXS|XS|S|M|L|XL|XXL)\b/i);
+    if (sizeMatch) facts["Size"] = sizeMatch[1].toUpperCase();
+
+    const customerMatch = displayText.match(/(?:^|\n)Customer size:\s*([^\n]+)/i);
+    if (customerMatch) facts["Customer Size"] = customerMatch[1].trim();
+
+    const acvMatch = displayText.match(/(?:^|\n)(?:Minimum ACV|Qualifying ACV):\s*([^\n]+)/i);
+    if (acvMatch) facts["ACV"] = acvMatch[1].trim();
+
+    const acrMatch = displayText.match(/(?:^|\n)ACR range:\s*([^\n]+)/i);
+    if (acrMatch) facts["ACR"] = acrMatch[1].trim();
+
+    const engagementMatch = displayText.match(/(?:^|\n)Engagement:\s*([^\n]+)/i);
+    if (engagementMatch) facts["Engagement"] = engagementMatch[1].trim();
+
+    const marketMatch = displayText.match(/\bMarket\s+([A-C])\b/i);
+    if (marketMatch) facts["Market"] = "Market " + marketMatch[1].toUpperCase();
+    else if (forceMarketA) facts["Market"] = "Market A";
+
+    return Object.keys(facts).length >= 2 ? facts : null;
   }
-
-  // ---------------------------------------------------------------
-  // Size
-  // ---------------------------------------------------------------
-  const sizeMatch =
-    displayText.match(
-      /(?:^|\n)\s*Size\s*:?\s*(XXS|XS|S|M|L|XL|XXL)\b/i
-    ) ||
-    displayText.match(
-      /\b(XXS|XS|S|M|L|XL|XXL)\b/i
-    );
-
-  if (sizeMatch) {
-    facts["Size"] = sizeMatch[1].toUpperCase();
-  }
-
-  // ---------------------------------------------------------------
-  // Customer Size
-  // ---------------------------------------------------------------
-  const customerMatch = displayText.match(
-    /(?:^|\n)\s*Customer\s+Size\s*:?\s*([^\n]+)/i
-  );
-
-  if (customerMatch) {
-    facts["Customer Size"] = customerMatch[1].trim();
-  }
-
-  // ---------------------------------------------------------------
-  // ACV
-  // ---------------------------------------------------------------
-  const acvMatch = displayText.match(
-    /(?:^|\n)\s*(?:Minimum\s+ACV|Qualifying\s+ACV)\s*:?\s*([^\n]+)/i
-  );
-
-  if (acvMatch) {
-    facts["ACV"] = acvMatch[1].trim();
-  }
-
-  // ---------------------------------------------------------------
-  // ACR
-  // ---------------------------------------------------------------
-  const acrMatch = displayText.match(
-    /(?:^|\n)\s*ACR\s+range\s*:?\s*([^\n]+)/i
-  );
-
-  if (acrMatch) {
-    facts["ACR"] = acrMatch[1].trim();
-  }
-
-  // ---------------------------------------------------------------
-  // Engagement
-  // ---------------------------------------------------------------
-  const engagementMatch = displayText.match(
-    /(?:^|\n)\s*Engagement\s*:?\s*([^\n]+)/i
-  );
-
-  if (engagementMatch) {
-    facts["Engagement"] = engagementMatch[1].trim();
-  }
-
-  // ---------------------------------------------------------------
-  // Market
-  // ---------------------------------------------------------------
-  const marketMatch = displayText.match(
-    /\bMarket\s+([A-C])\b/i
-  );
-
-  if (marketMatch) {
-    facts["Market"] = "Market " + marketMatch[1].toUpperCase();
-  }
-
-  // Even a single valid fact such as "$80,000" should be rendered
-  // as a compact card instead of showing the raw source/page text.
-  return Object.keys(facts).length > 0 ? facts : null;
-}
 
   function renderFallbackFactTable(facts) {
     const rowsHTML = Object.entries(facts).map(([k, v]) => `
@@ -703,101 +642,126 @@
       </div>`;
   }
 
+  // Render every funding answer in the same compact fact-card style.
+  // Fixed acceptance questions and normal RAG questions intentionally use
+  // the same visual format. Page numbers, chunk IDs, and source badges are
+  // never shown to the user.
   function renderAnswer(answerText, matchedRecords, isFixedAcceptance = false, answerKind = "funding") {
+    const rawAnswer = answerText || "";
+    const records = matchedRecords || [];
 
-  // ===============================================================
-  // FIXED 60 QUESTIONS ONLY
-  // Use the new compact structured format only for the deterministic
-  // acceptance questions.
-  // ===============================================================
-  if (isFixedAcceptance) {
-
-    // Presales fixed questions (21-29)
-    const answerLooksPresales =
-      /incremental net new paid seat|high-water mark|\bHWM\b/i.test(answerText || "");
+    // ------------------------------------------------------------
+    // Presales questions (including fixed questions 21-29)
+    // ------------------------------------------------------------
+    const answerLooksPresales = /incremental net new paid seat|high-water mark|\bHWM\b/i.test(rawAnswer);
 
     if (answerKind === "presales" || answerLooksPresales) {
-      const card = renderPresalesCard(answerText);
-
-      return {
-        html: `<p class="text-sm leading-relaxed text-white/70">Here's what I found:</p>${card}`,
-        plainText: answerText
-      };
+      const card = renderPresalesCard(rawAnswer);
+      if (card) {
+        return {
+          html: `<p class="text-sm leading-relaxed text-white/70">Here's what I found:</p>${card}`,
+          plainText: rawAnswer
+            .replace(/\s*Source\s*:\s*Page\s+\d+(?:\s*\(\s*Chunk\s+ID\s*:\s*[^)]+\))?/gi, "")
+            .trim()
+        };
+      }
     }
 
-    // Fixed funding questions
-    const facts = extractFactsFromText(answerText, true);
+    const facts = {};
 
-    if (facts) {
+    // ------------------------------------------------------------
+    // 1. Read structured values from the RAG record first.
+    //    Never display technical fields such as page_ref/chunk/content.
+    // ------------------------------------------------------------
+    if (records.length > 0) {
+      const first = records[0] || {};
+      const row = first.row || {};
+
+      const pick = (...keys) => {
+        for (const key of keys) {
+          const value = row[key];
+          if (value !== undefined && value !== null && String(value).trim()) {
+            return String(value).trim();
+          }
+        }
+        return "";
+      };
+
+      const amount = pick(
+        "Amount", "amount", "Payment", "payment",
+        "Market A Payment", "Market A payment", "Market A"
+      );
+      if (amount) facts["Amount"] = amount;
+
+      const size = pick("Size", "size", "Tier", "tier", "Engagement Size", "Engagement size");
+      if (size) facts["Size"] = size;
+
+      const customerSize = pick(
+        "Customer Size", "Customer size", "customer_size", "customerSize"
+      );
+      if (customerSize) facts["Customer Size"] = customerSize;
+
+      const acv = pick("ACV", "acv", "ACV Range", "ACV range", "Minimum ACV", "Qualifying ACV");
+      if (acv) facts["ACV"] = acv;
+
+      const acr = pick("ACR", "acr", "ACR Range", "ACR range");
+      if (acr) facts["ACR"] = acr;
+
+      const engagement = first.engagement || pick("Engagement", "engagement");
+      if (engagement) facts["Engagement"] = String(engagement).trim();
+
+      const market = pick("Market", "market");
+      if (market) facts["Market"] = market;
+    }
+
+    // ------------------------------------------------------------
+    // 2. Supplement missing fields from the answer text.
+    //    This is important for normal RAG answers that return only the
+    //    payout in the answer but keep size/market/engagement in metadata.
+    // ------------------------------------------------------------
+    const textFacts = extractFactsFromText(rawAnswer, isFixedAcceptance);
+    if (textFacts) {
+      for (const [key, value] of Object.entries(textFacts)) {
+        if (!facts[key]) facts[key] = value;
+      }
+    }
+
+    // If the answer is simply a dollar figure, still show it as Amount.
+    if (!facts["Amount"]) {
+      const amountOnly = rawAnswer.match(/^\s*(\$[\d,]+(?:\.\d+)?)\s*(?:Source:.*)?$/is);
+      if (amountOnly) facts["Amount"] = amountOnly[1];
+    }
+
+    // ------------------------------------------------------------
+    // 3. If we have useful structured facts, ALWAYS use the compact card.
+    // ------------------------------------------------------------
+    if (Object.keys(facts).length > 0) {
       return {
         html:
           `<p class="text-sm leading-relaxed text-white/70">Here's what I found:</p>` +
           renderFallbackFactTable(facts),
-        plainText: answerText
+        plainText: Object.entries(facts)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join("\n")
       };
     }
 
-    // Safety fallback for a fixed answer that doesn't match the
-    // structured parser.
+    // ------------------------------------------------------------
+    // 4. Final fallback. Preserve the useful answer text, but strip all
+    //    page/source/chunk metadata from what the user sees.
+    // ------------------------------------------------------------
+    const cleanAnswer = rawAnswer
+      .replace(/\s*Source\s*:\s*Page\s+\d+(?:\s*\(\s*Chunk\s+ID\s*:\s*[^)]+\))?/gi, "")
+      .replace(/\bPage[s]?\s+\d+(?:\s*,\s*\d+)*\b/gi, "")
+      .replace(/\bChunk\s+ID\s*:\s*[^,\n)]+/gi, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
     return {
-      html: formatAnswerText(answerText),
-      plainText: answerText
+      html: formatAnswerText(cleanAnswer),
+      plainText: cleanAnswer
     };
   }
-
-
-  // ===============================================================
-  // ALL OTHER QUESTIONS
-  // Keep the original RAG rendering behavior.
-  // DO NOT run fixed-answer fact extraction here.
-  // ===============================================================
-
-  const records = matchedRecords || [];
-
-  // Existing matched-record source cards
-  const byEngagement = new Map();
-
-  for (const r of records) {
-    const key = r.engagement + "||" + (r.page_ref || "");
-
-    if (!byEngagement.has(key)) {
-      byEngagement.set(key, {
-        engagement: r.engagement,
-        page_ref: r.page_ref,
-        rows: []
-      });
-    }
-
-    byEngagement.get(key).rows.push(r.row || {});
-  }
-
-  let tablesHTML = Array.from(byEngagement.values())
-    .map((g) =>
-      g.rows.length > 1
-        ? renderCombinedTable(g.engagement, g.page_ref, g.rows)
-        : renderSourceCard({
-            engagement: g.engagement,
-            page_ref: g.page_ref,
-            row: g.rows[0]
-          })
-    )
-    .join("");
-
-  const hasTable = records.length > 0;
-
-  // For normal RAG questions:
-  // - If matched records exist, show the existing source card/table.
-  // - If not, show the original answer text.
-  // DO NOT extract Amount/Size/Market here.
-  const answerHTML = hasTable
-    ? `<p class="text-sm leading-relaxed text-white/70">Here's what I found:</p>`
-    : formatAnswerText(answerText);
-
-  return {
-    html: answerHTML + tablesHTML,
-    plainText: answerText
-  };
-}
 
   function showTypingIndicator() {
     const row = document.createElement("div");
