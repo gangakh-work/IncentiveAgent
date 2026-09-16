@@ -79,7 +79,6 @@ def setup_logging() -> None:
             logging.StreamHandler(sys.stdout),
         ],
     )
-
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("chromadb").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.ERROR)
