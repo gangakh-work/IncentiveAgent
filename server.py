@@ -280,6 +280,23 @@ def landing_page():
     )
 
 
+@app.get("/index.html", include_in_schema=False)
+def index_html_page():
+    """
+    Displays the landing page when navigating directly to /index.html.
+    """
+    if not INDEX_HTML.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Landing page not found: {INDEX_HTML}",
+        )
+
+    return FileResponse(
+        str(INDEX_HTML),
+        media_type="text/html",
+    )
+
+
 @app.get("/chat.html", include_in_schema=False)
 def chat_page():
     """

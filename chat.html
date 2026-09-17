@@ -215,6 +215,218 @@
     text-overflow: clip;
   }
 
+
+  /* Enhanced usability features */
+  .saved-dropdown { background: #090711 !important; opacity: 1 !important; border: 1px solid rgba(255,255,255,.16); box-shadow: 0 24px 70px rgba(0,0,0,.72); backdrop-filter: none !important; }
+  .saved-dropdown input { background: #15111f; border: 1px solid rgba(255,255,255,.14); }
+  .question-filter-row { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
+  .question-filter-select { min-width:0; background:#15111f; border:1px solid rgba(255,255,255,.12); color:rgba(255,255,255,.82); }
+  .recent-question-btn { background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.07); }
+  .recent-question-btn:hover { background:rgba(180,85,255,.10); border-color:rgba(180,85,255,.28); }
+  .saved-dropdown-item { background: transparent; border: 1px solid transparent; }
+  .saved-dropdown-item:hover { background: rgba(180,85,255,.10); border-color: rgba(180,85,255,.25); }
+  .feature-card { background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.08); }
+  .feature-card:hover { background: rgba(180,85,255,.08); border-color: rgba(180,85,255,.28); }
+  .section-search { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.09); }
+  .section-search:focus { border-color: rgba(180,85,255,.55); outline: none; box-shadow: 0 0 0 3px rgba(180,85,255,.10); }
+  .question-result-count { color: rgba(255,255,255,.38); font-size: 10px; }
+  .followup-chip { border: 1px solid rgba(180,85,255,.28); background: rgba(180,85,255,.07); }
+  .followup-chip:hover { background: rgba(180,85,255,.16); }
+  @media (max-width: 768px) { .sidebar-glass { width: 320px !important; } }
+
+</style>
+
+<style id="premium-feature-pack">
+  #questionSearchMode { min-width: 0; background:#15111f; color:#f4f2fb; border:1px solid rgba(255,255,255,.12); }
+  .premium-menu { background:#08070d; border:1px solid rgba(255,255,255,.18); box-shadow:0 24px 70px rgba(0,0,0,.75); }
+  .premium-menu button { display:block; width:100%; text-align:left; padding:9px 11px; border-radius:10px; color:rgba(255,255,255,.78); font-size:12px; }
+  .premium-menu button:hover { background:rgba(180,85,255,.14); color:#fff; }
+  .answer-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .answer-action { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.035); color:rgba(255,255,255,.62); border-radius:9px; padding:5px 8px; font-size:10px; font-weight:700; }
+  .answer-action:hover { background:rgba(180,85,255,.13); color:#fff; border-color:rgba(180,85,255,.4); }
+  .source-drawer { background:#08070d; border:1px solid rgba(255,255,255,.18); box-shadow:0 24px 70px rgba(0,0,0,.75); }
+  .followup-chip { border:1px solid rgba(180,85,255,.3); background:rgba(180,85,255,.08); color:rgba(255,255,255,.78); border-radius:999px; padding:7px 10px; font-size:11px; text-align:left; }
+  .followup-chip:hover { background:rgba(180,85,255,.18); color:#fff; }
+  .pin-question-btn { opacity:.55; margin-left:5px; }
+  .pin-question-btn.pinned { opacity:1; color:#d8a8ff; }
+  @media (max-width:768px) { .premium-menu { right:0; } }
+</style>
+
+<style id="final-layout-fixes">
+  #savedChatsDropdown {
+    position: fixed !important;
+    top: 76px !important;
+    right: 24px !important;
+    z-index: 9999 !important;
+    background: #08070d !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    isolation: isolate;
+  }
+  #premiumMenu { z-index: 9998 !important; background: #08070d !important; opacity: 1 !important; }
+  @media (max-width: 768px) { #savedChatsDropdown { right: 12px !important; top: 68px !important; } }
+</style>
+
+<style id="final-two-card-layout">
+  /* Two-card desktop layout */
+  #app-shell {
+    padding: 0 !important;
+  }
+  #app-shell > .flex-1 {
+    gap: 18px;
+    padding: 18px;
+    align-items: stretch;
+  }
+  #sidebar {
+    width: 40% !important;
+    max-width: 40% !important;
+    flex: 0 0 40% !important;
+    min-width: 0;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #0d0b15 !important;
+    box-shadow: 0 18px 55px rgba(0,0,0,.22);
+  }
+  #mainContent {
+    width: 60%;
+    min-width: 0;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 24px;
+    overflow: visible;
+    background: #0b0912;
+    box-shadow: 0 18px 55px rgba(0,0,0,.22);
+  }
+  #mainContent > header {
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+  }
+  #mainContent > .chat-scroll,
+  #mainContent > #messages,
+  #mainContent > .flex-1 {
+    min-width: 0;
+  }
+  #savedChatsDropdown {
+    position: fixed !important;
+    top: 82px !important;
+    right: 24px !important;
+    width: min(460px, calc(100vw - 48px)) !important;
+    max-height: calc(100vh - 110px) !important;
+    overflow: hidden !important;
+    z-index: 2147483000 !important;
+    isolation: isolate !important;
+    background: #07060c !important;
+    background-color: #07060c !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 28px 90px rgba(0,0,0,.92), 0 0 0 1px rgba(255,255,255,.08) !important;
+  }
+  #savedChatsDropdown::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: #07060c;
+    z-index: -1;
+  }
+  #savedChatsDropdown #savedChatsList {
+    max-height: calc(100vh - 245px) !important;
+    overflow-y: auto !important;
+    background: #07060c !important;
+  }
+  #savedChatsDropdown .saved-chat-btn,
+  #savedChatsDropdown .saved-dropdown-item {
+    background: #100d18 !important;
+    border-color: rgba(255,255,255,.08) !important;
+  }
+  #savedChatsDropdown .saved-chat-btn:hover,
+  #savedChatsDropdown .saved-dropdown-item:hover {
+    background: #21152f !important;
+  }
+  #premiumMenu {
+    z-index: 2147482999 !important;
+    background: #07060c !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  @media (max-width: 900px) {
+    #app-shell > .flex-1 { padding: 10px; gap: 10px; }
+    #sidebar { width: 40% !important; max-width: 40% !important; flex-basis: 40% !important; }
+    #mainContent { width: 60%; }
+  }
+  @media (max-width: 768px) {
+    #app-shell > .flex-1 { padding: 0; gap: 0; }
+    #sidebar { width: 320px !important; max-width: none !important; flex-basis: auto !important; border-radius: 0; }
+    #mainContent { width: 100%; border-radius: 0; border: 0; }
+    #savedChatsDropdown { right: 12px !important; top: 68px !important; width: calc(100vw - 24px) !important; }
+  }
+</style>
+
+
+<style id="saved-dropdown-final-fix">
+  /* Keep the header controls and menus in one top stacking layer. */
+  #mainContent > header {
+    position: relative !important;
+    z-index: 10000 !important;
+    isolation: isolate !important;
+    overflow: visible !important;
+  }
+  #mainContent > header > .relative {
+    position: relative !important;
+    z-index: 10001 !important;
+    isolation: isolate !important;
+  }
+  #savedChatsDropdown {
+    position: absolute !important;
+    top: calc(100% + 12px) !important;
+    right: 0 !important;
+    left: auto !important;
+    width: min(460px, calc(100vw - 32px)) !important;
+    max-height: min(560px, calc(100vh - 112px)) !important;
+    overflow: hidden !important;
+    display: block;
+    background: rgb(7, 6, 12) !important;
+    background-color: rgb(7, 6, 12) !important;
+    opacity: 1 !important;
+    mix-blend-mode: normal !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255,255,255,.20) !important;
+    box-shadow: 0 24px 80px rgba(0,0,0,.95) !important;
+    z-index: 2147483647 !important;
+  }
+  #savedChatsDropdown.hidden { display: none !important; }
+  #savedChatsDropdown::before { display: none !important; }
+  #savedChatsDropdown #savedChatsList {
+    background: rgb(7, 6, 12) !important;
+    max-height: 360px !important;
+    overflow-y: auto !important;
+  }
+  #savedChatsDropdown .saved-dropdown-item,
+  #savedChatsDropdown .saved-chat-btn {
+    background: rgb(16, 13, 24) !important;
+    opacity: 1 !important;
+  }
+  #premiumMenu {
+    position: absolute !important;
+    top: calc(100% + 12px) !important;
+    right: 0 !important;
+    z-index: 2147483646 !important;
+    background: rgb(7, 6, 12) !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  @media (max-width: 768px) {
+    #savedChatsDropdown {
+      position: fixed !important;
+      top: 68px !important;
+      right: 12px !important;
+      width: calc(100vw - 24px) !important;
+    }
+  }
 </style>
 </head>
 <body class="antialiased">
@@ -251,22 +463,29 @@
       </div>
 
       <div class="px-4 flex-1 min-h-0 flex flex-col gap-4">
-        <div class="flex flex-col min-h-0 flex-1">
-          <div class="flex items-center justify-between mb-2 px-1">
-            <span class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/40">Saved chats</span>
-            <span id="chat-count" class="text-[11px] font-semibold neon-text-green">0</span>
-          </div>
-          <div id="savedChatsList" class="scroll-thin flex-1 overflow-y-auto space-y-1.5 pr-1">
-            <p id="savedChatsEmpty" class="text-xs text-white/30 px-2 py-3">No saved chats yet. Start a conversation and it'll show up here.</p>
-          </div>
-        </div>
         <div class="question-library flex flex-col min-h-0 flex-1 pb-2">
           <div class="flex items-center justify-between mb-2 px-1">
             <span class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/40">Question library</span>
             <span class="text-[10px] text-white/30">60 questions</span>
           </div>
+          <div class="mb-3 space-y-2">
+            <div class="question-filter-row">
+              <select id="questionSectionFilter" class="question-filter-select rounded-xl px-2 py-2 text-xs" aria-label="Choose question section">
+                <option value="">All sections</option>
+              </select>
+              <select id="questionSubsectionFilter" class="question-filter-select rounded-xl px-2 py-2 text-xs" aria-label="Choose question subsection" disabled>
+                <option value="">All subsections</option>
+              </select>
+              <select id="questionSearchMode" class="question-filter-select rounded-xl px-2 py-2 text-xs" aria-label="Choose search mode">
+                <option value="questions">Questions</option>
+                <option value="keywords">Keywords</option>
+                <option value="all">All fields</option>
+              </select>
+            </div>
+            <input id="globalQuestionSearch" class="section-search w-full rounded-xl px-3 py-2 text-xs text-white placeholder:text-white/30" placeholder="Search selected section or subsection..." autocomplete="off" />
+          </div>
           <div id="questionLibrary" class="scroll-thin flex-1 overflow-y-auto space-y-2 pr-1">
-            <!-- The six question pages are rendered here by JavaScript. -->
+            <!-- The question library is rendered here by JavaScript. -->
           </div>
         </div>
       </div>
@@ -283,11 +502,33 @@
             <p id="appSubtitle" class="text-xs text-white/45 font-medium truncate">Ask about payments, eligibility, and engagement tiers</p>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="relative flex items-center gap-2">
+          <button id="savedChatsToggle" type="button" aria-expanded="false" class="inline-flex items-center gap-2 rounded-xl icon-btn px-3 py-2 text-xs font-semibold">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v16l-7-4-7 4z"/></svg>
+            <span class="hidden sm:inline">Saved Chats</span>
+            <span id="chat-count" class="neon-text-green">0</span>
+            <span>▾</span>
+          </button>
+          <div id="savedChatsDropdown" class="saved-dropdown hidden absolute right-0 top-12 z-50 w-[min(430px,calc(100vw-2rem))] rounded-2xl p-3">
+            <div class="flex items-center justify-between gap-3 mb-2">
+              <p class="text-sm font-semibold text-white">Saved conversations</p>
+              <button id="clearSavedChatsBtn" type="button" class="text-xs text-rose-300 hover:text-rose-200">Clear all</button>
+            </div>
+            <input id="savedChatsSearch" class="w-full rounded-xl px-3 py-2 text-xs text-white placeholder:text-white/30 mb-2" placeholder="Search saved chats..." autocomplete="off" />
+            <div id="savedChatsList" class="scroll-thin max-h-[360px] overflow-y-auto space-y-1.5">
+              <p id="savedChatsEmpty" class="text-xs text-white/35 px-2 py-3">No saved chats yet.</p>
+            </div>
+          </div>
           <button id="clear-chat-btn" type="button" class="inline-flex items-center gap-2 rounded-xl icon-btn px-3 py-2 text-xs font-semibold">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
             <span class="hidden sm:inline">Clear</span>
           </button>
+          <button id="premiumMenuToggle" type="button" class="inline-flex items-center justify-center rounded-xl icon-btn px-3 py-2 text-xs font-semibold" aria-expanded="false" aria-label="More options">⋯</button>
+          <div id="premiumMenu" class="premium-menu hidden absolute right-0 top-12 z-50 w-52 rounded-2xl p-2">
+            <button type="button" id="keyboardHelpBtn">⌨ Keyboard shortcuts</button>
+            <button type="button" id="resetPreferencesBtn">↺ Reset local preferences</button>
+            <button type="button" id="aboutAgentBtn">ⓘ About this assistant</button>
+          </div>
         </div>
       </header>
 
@@ -353,7 +594,7 @@
 <div id="sidebarBackdrop" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"></div>
 
 <script>
-  const API_BASE = window.INCENTIVES_API_BASE || "";
+  const API_BASE = (window.INCENTIVES_API_BASE || "http://127.0.0.1:8000").replace(/\/+$/, "");
 
   let activeChatId = null;
   let chats = JSON.parse(localStorage.getItem("ia_chats") || "{}");
@@ -381,6 +622,9 @@
   const savedChatsList = document.getElementById("savedChatsList");
   const chatCount = document.getElementById("chat-count");
   const questionLibrary = document.getElementById("questionLibrary");
+  const globalQuestionSearch = document.getElementById("globalQuestionSearch");
+  const questionSectionFilter = document.getElementById("questionSectionFilter");
+  const questionSubsectionFilter = document.getElementById("questionSubsectionFilter");
 
   const questionPages = {
     "Modern Work & Security": {
@@ -473,51 +717,62 @@
   let selectedLibrarySection = null;
   let selectedLibraryPhase = null;
 
-  function renderQuestionLibrary() {
+  function renderQuestionLibrary(filterText = "") {
     questionLibrary.innerHTML = "";
+    const query = filterText.trim().toLowerCase();
+    const selectedSection = questionSectionFilter.value;
+    const selectedPhase = questionSubsectionFilter.value;
+    let totalMatches = 0;
     Object.entries(questionPages).forEach(([section, page]) => {
+      if (selectedSection && selectedSection !== section) return;
+      const sectionMatches = Object.entries(page.phases).flatMap(([phase, questions]) => {
+        if (selectedPhase && selectedPhase !== phase) return [];
+        return questions.filter(q => !query || `${section} ${phase} ${q}`.toLowerCase().includes(query))
+          .map(q => ({ phase, q }));
+      });
+      if (query && !sectionMatches.length) return;
+      totalMatches += sectionMatches.length;
       const sectionWrap = document.createElement("div");
       const sectionButton = document.createElement("button");
       sectionButton.type = "button";
       sectionButton.className = "library-section-btn flex items-center justify-between gap-2";
-      if (selectedLibrarySection === section) sectionButton.classList.add("active");
-      sectionButton.innerHTML = `<span class="text-xs font-semibold text-white">${escapeHTML(section)}</span><span class="text-white/45 text-xs">${selectedLibrarySection === section ? "−" : "+"}</span>`;
+      const isOpen = selectedLibrarySection === section || Boolean(query);
+      if (isOpen) sectionButton.classList.add("active");
+      sectionButton.innerHTML = `<span class="text-xs font-semibold text-white">${escapeHTML(section)}</span><span class="text-white/45 text-xs">${isOpen ? "−" : "+"}</span>`;
       sectionButton.addEventListener("click", () => {
         selectedLibrarySection = selectedLibrarySection === section ? null : section;
         selectedLibraryPhase = null;
-        renderQuestionLibrary();
+        renderQuestionLibrary(globalQuestionSearch.value);
       });
       sectionWrap.appendChild(sectionButton);
-
-      if (selectedLibrarySection === section) {
+      if (isOpen) {
         const phaseWrap = document.createElement("div");
         phaseWrap.className = "mt-1.5 space-y-1.5 pl-1";
         Object.entries(page.phases).forEach(([phase, questions]) => {
+          if (selectedPhase && selectedPhase !== phase) return;
+          const matches = questions.filter(q => !query || `${section} ${phase} ${q}`.toLowerCase().includes(query));
+          if (query && !matches.length) return;
           const phaseButton = document.createElement("button");
           phaseButton.type = "button";
           phaseButton.className = "library-phase-btn flex items-center justify-between gap-2";
-          if (selectedLibraryPhase === phase) phaseButton.classList.add("active");
-          phaseButton.innerHTML = `<span class="text-xs font-semibold">${phase}</span><span class="text-white/35 text-xs">${selectedLibraryPhase === phase ? "−" : "+"}</span>`;
+          const phaseOpen = selectedLibraryPhase === phase || Boolean(query);
+          if (phaseOpen) phaseButton.classList.add("active");
+          phaseButton.innerHTML = `<span class="text-xs font-semibold">${escapeHTML(phase)}</span><span class="question-result-count">${matches.length} ${phaseOpen ? "−" : "+"}</span>`;
           phaseButton.addEventListener("click", () => {
             selectedLibraryPhase = selectedLibraryPhase === phase ? null : phase;
-            renderQuestionLibrary();
+            renderQuestionLibrary(globalQuestionSearch.value);
           });
           phaseWrap.appendChild(phaseButton);
-
-          if (selectedLibraryPhase === phase) {
+          if (phaseOpen) {
             const questionWrap = document.createElement("div");
             questionWrap.className = "mt-1.5 space-y-1 pl-1";
-            questions.forEach((question, index) => {
+            matches.forEach((question, index) => {
               const questionButton = document.createElement("button");
               questionButton.type = "button";
               questionButton.className = "library-question-btn";
               questionButton.textContent = `${index + 1}. ${question}`;
               questionButton.title = question;
-              questionButton.addEventListener("click", () => {
-                runQuery(question);
-                document.querySelectorAll(".library-question-btn.selected").forEach((el) => el.classList.remove("selected"));
-                questionButton.classList.add("selected");
-              });
+              questionButton.addEventListener("click", () => runQuery(question));
               questionWrap.appendChild(questionButton);
             });
             phaseWrap.appendChild(questionWrap);
@@ -527,8 +782,35 @@
       }
       questionLibrary.appendChild(sectionWrap);
     });
+    if (query && !totalMatches) {
+      questionLibrary.innerHTML = '<p class="text-xs text-white/40 px-2 py-3">No matching questions. Try market, technology, ACV, funding, or engagement.</p>';
+    }
   }
 
+  Object.keys(questionPages).forEach(section => {
+    const option = document.createElement("option");
+    option.value = section;
+    option.textContent = section;
+    questionSectionFilter.appendChild(option);
+  });
+  questionSectionFilter.addEventListener("change", () => {
+    questionSubsectionFilter.innerHTML = '<option value="">All subsections</option>';
+    const section = questionPages[questionSectionFilter.value];
+    questionSubsectionFilter.disabled = !section;
+    if (section) Object.keys(section.phases).forEach(phase => {
+      const option = document.createElement("option");
+      option.value = phase;
+      option.textContent = phase;
+      questionSubsectionFilter.appendChild(option);
+    });
+    selectedLibrarySection = questionSectionFilter.value || null;
+    selectedLibraryPhase = null;
+    renderQuestionLibrary(globalQuestionSearch.value);
+  });
+  questionSubsectionFilter.addEventListener("change", () => {
+    selectedLibraryPhase = questionSubsectionFilter.value || null;
+    renderQuestionLibrary(globalQuestionSearch.value);
+  });
   renderQuestionLibrary();
 
   function escapeHTML(str) {
@@ -700,7 +982,7 @@
 
     // If the text already contains an explicit bullet/dash list (common
     // for clarifying-question responses: a framing sentence followed by
-    // "- Option A\n- Option B"), keep the framing sentence as prose and
+    // "- Option A / - Option B", keep the framing sentence as prose and
     // only bullet the actual list lines, rather than splitting the
     // framing sentence itself into fragments.
     const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
@@ -800,7 +1082,7 @@
     const text = (answerText || "").trim();
     if (!text) return "";
 
-    const rateMatch = text.match(/(\$[\d,]+(?:\.\d+)?\s+per\s+incremental[^.\n]*)/i);
+    const rateMatch = text.match(/(\$[\d,]+(?:\.\d+)?\s+per\s+incremental[^.]*)/i);
     const rate = rateMatch ? rateMatch[1].trim() : ((text.match(/\$[\d,]+(?:\.\d+)?/) || [""])[0]);
 
     const hwm = /high-water mark|\bHWM\b/i.test(text);
@@ -892,17 +1174,11 @@
     row.id = "typingIndicatorRow";
     row.className = "flex gap-3 animate-fade-up";
     row.innerHTML = `
-<<<<<<< HEAD
       <img
         src="/logo.png"
         alt="Incentives Assistant"
         class="assistant-logo"
       />
-=======
-      <img src="/logo.png"
-     alt="IA"
-     style="width:36px;height:36px;object-fit:contain;">
->>>>>>> fb2aa34114aa83885b6a372b69433c6e58b17cc4
       <div class="bg-white/[0.03] border border-white/8 rounded-2xl rounded-tl-md px-4 py-3.5 flex items-center gap-1.5">
         <span class="typing-dot h-1.5 w-1.5 rounded-full"></span>
         <span class="typing-dot h-1.5 w-1.5 rounded-full"></span>
@@ -916,81 +1192,59 @@
     if (row) row.remove();
   }
 
-  function saveRecentSearch(query) {
-    // Recent questions are intentionally removed from the UI.
-  }
-
-  function renderRecentSearches() {
-    // Recent questions are intentionally removed from the UI.
-  }
-
-
+  const savedChatsToggle = document.getElementById("savedChatsToggle");
+  const savedChatsDropdown = document.getElementById("savedChatsDropdown");
+  const savedChatsSearch = document.getElementById("savedChatsSearch");
+  const clearSavedChatsBtn = document.getElementById("clearSavedChatsBtn");
   function saveChatTurn(question, answerHTML) {
     if (!activeChatId) activeChatId = "chat_" + Date.now();
-    if (!chats[activeChatId]) {
-    chats[activeChatId] = {
-      title: question,
-      turns: []
-    };
-  }
+    if (!chats[activeChatId]) chats[activeChatId] = { title: question, turns: [], createdAt: Date.now() };
+    chats[activeChatId].title = chats[activeChatId].turns[0]?.question || question;
     chats[activeChatId].turns.push({ question, answerHTML, time: getCurrentTime() });
     localStorage.setItem("ia_chats", JSON.stringify(chats));
     renderSavedChats();
   }
 
-  function renderSavedChats() {
+  function renderSavedChats(filter = "") {
     const ids = Object.keys(chats);
     chatCount.textContent = ids.length;
-
-    const emptyEl = document.getElementById("savedChatsEmpty");
-
-    savedChatsList
-      .querySelectorAll("[data-chat-item]")
-      .forEach((node) => node.remove());
-
-    if (!ids.length) {
-      emptyEl.classList.remove("hidden");
-      return;
-    }
-
-    emptyEl.classList.add("hidden");
-
-    ids.slice().reverse().forEach((id) => {
+    const query = filter.trim().toLowerCase();
+    savedChatsList.querySelectorAll("[data-chat-item]").forEach(node => node.remove());
+    const matching = ids.slice().reverse().filter(id => {
       const chat = chats[id];
-
+      return !query || `${chat.title || ""} ${(chat.turns || []).map(t => t.question).join(" ")}`.toLowerCase().includes(query);
+    });
+    savedChatsEmpty.classList.toggle("hidden", matching.length > 0);
+    if (!matching.length) { savedChatsEmpty.textContent = query ? "No saved chats match your search." : "No saved chats yet."; return; }
+    matching.forEach(id => {
+      const chat = chats[id];
+      const row = document.createElement("div");
+      row.className = "saved-dropdown-item rounded-xl p-2 flex items-start gap-2";
+      row.dataset.chatItem = "true";
       const btn = document.createElement("button");
-
       btn.type = "button";
-      btn.dataset.chatItem = "true";
-
-      btn.className =
-        "saved-chat-btn w-full text-left rounded-xl px-2.5 py-2 " +
-        "hover:bg-white/[0.04] transition group " +
-        "relative overflow-visible " +
-        (id === activeChatId
-          ? "bg-neon-purple/[0.1]"
-          : "");
-
-      btn.innerHTML = `
-        <p class="saved-chat-title font-semibold text-white">
-          ${escapeHTML(chat.title || chat.turns[0]?.question || "Untitled chat")}
-        </p>
-
-        <p class="text-[10px] text-white/35 mt-0.5">
-          ${chat.turns.length}
-          message${chat.turns.length === 1 ? "" : "s"}
-        </p>
-      `;
-
-      btn.title = chat.title || "";
-
-      btn.addEventListener("click", () => loadChat(id));
-
-      savedChatsList.appendChild(btn);
+      btn.className = "min-w-0 flex-1 text-left";
+      btn.innerHTML = `<p class="saved-chat-title font-semibold text-white">${escapeHTML(chat.title || chat.turns?.[0]?.question || "Untitled chat")}</p><p class="text-[10px] text-white/35 mt-1">${chat.turns?.length || 0} message${(chat.turns?.length || 0) === 1 ? "" : "s"}</p>`;
+      btn.addEventListener("click", () => { loadChat(id); closeSavedDropdown(); });
+      const del = document.createElement("button");
+      del.type = "button"; del.className = "text-white/35 hover:text-rose-300 text-xs px-1"; del.textContent = "×"; del.title = "Delete saved chat";
+      del.addEventListener("click", () => { delete chats[id]; localStorage.setItem("ia_chats", JSON.stringify(chats)); renderSavedChats(savedChatsSearch.value); });
+      row.append(btn, del); savedChatsList.appendChild(row);
     });
   }
 
-  
+  function closeSavedDropdown() { savedChatsDropdown.classList.add("hidden"); savedChatsToggle.setAttribute("aria-expanded", "false"); }
+  savedChatsToggle.addEventListener("click", () => {
+    const open = savedChatsDropdown.classList.toggle("hidden");
+    savedChatsToggle.setAttribute("aria-expanded", String(!open));
+    if (!open) { savedChatsSearch.focus(); renderSavedChats(savedChatsSearch.value); }
+  });
+  savedChatsSearch.addEventListener("input", () => renderSavedChats(savedChatsSearch.value));
+  clearSavedChatsBtn.addEventListener("click", () => {
+    if (!Object.keys(chats).length) return;
+    if (confirm("Clear all saved chats?")) { chats = {}; activeChatId = null; localStorage.removeItem("ia_chats"); renderSavedChats(); showToast("Saved chats cleared"); }
+  });
+  document.addEventListener("click", (event) => { if (!savedChatsDropdown.contains(event.target) && !savedChatsToggle.contains(event.target)) closeSavedDropdown(); });
 
   function loadChat(id) {
     const chat = chats[id];
@@ -1019,10 +1273,6 @@
     messagesEl.innerHTML = "";
     setWelcomeMode(true);
     showToast("Conversation cleared");
-  });
-
-  document.querySelectorAll("[data-suggest]").forEach((btn) => {
-    btn.addEventListener("click", () => runQuery(btn.dataset.suggest));
   });
 
   async function runQuery(query) {
@@ -1057,6 +1307,20 @@
     }
   }
 
+  globalQuestionSearch.addEventListener("input", () => renderQuestionLibrary(globalQuestionSearch.value));
+
+  document.querySelectorAll("[data-tool]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const prompts = {
+        compare: "Compare XS and XXS engagement sizes for a D365 opportunity",
+        explain: "Explain how to find the correct incentive from the workbook",
+        export: "Please provide a clean copy-ready summary of the current answer"
+      };
+      chatInput.value = prompts[button.dataset.tool] || "";
+      chatInput.focus();
+    });
+  });
+
   chatForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const q = chatInput.value.trim();
@@ -1077,13 +1341,13 @@
       const res = await fetch(`${API_BASE}/api/status`);
       if (!res.ok) throw new Error("status failed");
       const data = await res.json();
-      statusDot.className = "h-2.5 w-2.5 rounded-full status-dot-live";
-      statusText.textContent = `Live · ${data.engagement_count ?? "?"} engagements loaded`;
-      demoBanner.classList.add("hidden");
+      if (statusDot) statusDot.className = "h-2.5 w-2.5 rounded-full status-dot-live";
+      if (statusText) statusText.textContent = `Live · ${data.engagement_count ?? "?"} engagements loaded`;
+      if (demoBanner) demoBanner.classList.add("hidden");
     } catch {
-      statusDot.className = "h-2.5 w-2.5 rounded-full status-dot-off";
-      statusText.textContent = "API not connected";
-      demoBanner.classList.remove("hidden");
+      if (statusDot) statusDot.className = "h-2.5 w-2.5 rounded-full status-dot-off";
+      if (statusText) statusText.textContent = "API not connected";
+      if (demoBanner) demoBanner.classList.remove("hidden");
     }
   }
 
