@@ -594,7 +594,7 @@
 <div id="sidebarBackdrop" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"></div>
 
 <script>
-  const API_BASE = (window.INCENTIVES_API_BASE || "http://127.0.0.1:8000").replace(/\/+$/, "");
+  const API_BASE = (window.INCENTIVES_API_BASE || "").replace(/\/+$/, "");
 
   let activeChatId = null;
   let chats = JSON.parse(localStorage.getItem("ia_chats") || "{}");
